@@ -3,8 +3,6 @@ import zipfile
 import shutil
 import datetime
 
-
-
 folder_path = "C:\\Users\\" 
 log = "\\AppData\Roaming\\Language Business Solutions"
 save = "C:\\Users\\mestf\Desktop\\backup\\"
