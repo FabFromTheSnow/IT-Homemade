@@ -1,1 +1,1 @@
-Chat-GPT was deeply involved in those scripts creation :)
+Chat-GPT was deeply involved in the creation of these scripts :)
