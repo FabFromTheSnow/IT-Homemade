@@ -1,3 +1,4 @@
+#obsolete, use .cs
 import os
 import zipfile
 import shutil
