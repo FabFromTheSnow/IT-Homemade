@@ -1,6 +1,7 @@
 #Based on https://github.com/joshmadakor1/AD_PS/blob/master/1_CREATE_USERS.ps1
 # ----- Edit these Variables for your own Use Case ----- #
 $PASSWORD_FOR_USERS   = "Password1"
+# save people name as First-Name Last-Name
 $USER_FIRST_LAST_LIST = Get-Content .\names.txt
 
 
