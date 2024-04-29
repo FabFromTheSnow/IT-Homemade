@@ -28,7 +28,6 @@ foreach ($n in $USER_FIRST_LAST_LIST) {
                    -DisplayName "$($first.Substring(0,1).ToUpper()). $last" `
                    -Name $username `
                    -EmployeeID $username `
-                   -PasswordNeverExpires $true `
                    -Path $ouPath `
                    -Enabled $true `
                    -ErrorAction Stop `
