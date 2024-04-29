@@ -32,7 +32,7 @@ foreach ($n in $USER_FIRST_LAST_LIST) {
                    -Path $ouPath `
                    -Enabled $true `
                    -ErrorAction Stop `
-                   -ChangePasswordAtLogon True
+                   -ChangePasswordAtLogon $true
     } catch {
         Write-Host "Failed to create user: $username. Error: $($_.Exception.Message)" -ForegroundColor Red
         $errorList += $username  # Add the failed username to the list
