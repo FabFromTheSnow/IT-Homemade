@@ -1,5 +1,5 @@
 #Load AD module
-Import-Module ActiveDirectory
+Import-Module ActiveDirectory  #FIRST THING TO DO
 
 #Check for locked up account
 Search-ADAccount -LockedOut | Get-ADUser -Properties * | Select-Object Name, SamAccountName, LockedOut, lockoutTime, LastBadPasswordAttempt
@@ -20,4 +20,21 @@ $eventsGrouped = $events | Group-Object -Property { $_.ReplacementStrings[5..7] 
 }
 
 $eventsGrouped
+
+
+#Check for users with admin rights
+Get-ADGroupMember "Domain Admins" | Select-Object Name, SamAccountName
+Get-ADGroupMember "Enterprise Admins" | Select-Object Name, SamAccountName
+
+$computers = Get-ADComputer -Filter *
+foreach ($computer in $computers) {
+    $admins = Invoke-Command -ComputerName $computer.Name -ScriptBlock {
+        $localAdmins = Get-LocalGroupMember -Group "Administrators" | Where-Object {$_.ObjectClass -eq 'User'}
+        $localAdmins | Select-Object Name, PrincipalSource
+    }
+    if ($admins -ne $null) {
+        Write-Host "Local admins on $($computer.Name):"
+        $admins
+    }
+}
 
