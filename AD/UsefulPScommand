@@ -1,2 +1,5 @@
+#Load AD module
+Import-Module ActiveDirectory
+
 #Check for locked up account
 Search-ADAccount -LockedOut | Get-ADUser -Properties * | Select-Object Name, SamAccountName, LockedOut, lockoutTime, LastBadPasswordAttempt
