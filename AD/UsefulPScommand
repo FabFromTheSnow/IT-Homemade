@@ -3,3 +3,21 @@ Import-Module ActiveDirectory
 
 #Check for locked up account
 Search-ADAccount -LockedOut | Get-ADUser -Properties * | Select-Object Name, SamAccountName, LockedOut, lockoutTime, LastBadPasswordAttempt
+
+#Check for a specific security event ID from powershell
+Get-EventLog -LogName Security | Where-Object { $_.EventID -eq 4624}
+
+#Check for failed login attempt and counti
+$events = Get-EventLog -LogName Security -After (Get-Date).AddDays(-14) | Where-Object { $_.EventID -eq 4625 }
+
+$eventsGrouped = $events | Group-Object -Property { $_.ReplacementStrings[5..7] -join ' ' } | ForEach-Object {
+    $userEvents = $_.Group | Sort-Object -Property TimeGenerated
+    $trialCount = $userEvents.Count
+    [PSCustomObject]@{
+        UserName         = $_.Name
+        FailedLoginCount = $trialCount
+    }
+}
+
+$eventsGrouped
+
