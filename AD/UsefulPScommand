@@ -38,3 +38,5 @@ foreach ($computer in $computers) {
     }
 }
 
+#Set delete protection on an OU
+Get-ADObject -Identity 'OU=Domain Controllers,DC=gift,DC=sa' | Set-ADObject -ProtectedFromAccidentalDeletion:$true
