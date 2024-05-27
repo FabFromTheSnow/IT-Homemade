@@ -40,3 +40,6 @@ foreach ($computer in $computers) {
 
 #Set delete protection on an OU
 Get-ADObject -Identity 'OU=Domain Controllers,DC=gift,DC=sa' | Set-ADObject -ProtectedFromAccidentalDeletion:$true
+
+#copy groups from one to another
+Get-ADUser -Identity "usersource" -Properties memberOf | Select-Object -ExpandProperty memberOf | Add-ADGroupMember -Members "usercible"
