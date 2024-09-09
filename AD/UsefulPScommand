@@ -43,3 +43,16 @@ Get-ADObject -Identity 'OU=Domain Controllers,DC=gift,DC=sa' | Set-ADObject -Pro
 
 #copy groups from one to another
 Get-ADUser -Identity "usersource" -Properties memberOf | Select-Object -ExpandProperty memberOf | Add-ADGroupMember -Members "usercible"
+
+#It-connect > check if script run as admin
+function Test-AdminContext {
+    $UserIsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+
+    if (-not ($UserIsAdmin)) {
+        Write-Warning "Le script '$($MyInvocation.MyCommand)' ne peut pas être exécuté car la session PowerShell n'est pas exécutée dans le contexte Administrateur"
+        exit
+    }
+
+}
+
+Test-AdminContext
