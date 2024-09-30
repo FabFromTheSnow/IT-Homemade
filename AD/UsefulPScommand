@@ -58,6 +58,5 @@ function Test-AdminContext {
 Test-AdminContext
 
 # Unprotect all the OU of the ad
-
 Get-ADOrganizationalUnit -Filter * | Set-ADOrganizationalUnit -ProtectedFromAccidentalDeletion $false
 
