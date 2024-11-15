@@ -1,0 +1,36 @@
+#openssh sftp only
+
+# port setting
+Port 22
+
+# Specify host keys (if not specified, the default keys will be used)
+HostKey __PROGRAMDATA__/ssh/ssh_host_rsa_key
+HostKey __PROGRAMDATA__/ssh/ssh_host_ecdsa_key
+HostKey __PROGRAMDATA__/ssh/ssh_host_ed25519_key
+
+# Authentication methods (useless i believe but lazy to try
+PubkeyAuthentication yes
+PasswordAuthentication yes  # Set to 'no' if you prefer key-based authentication
+
+# Use the built-in SFTP subsystem
+Subsystem sftp internal-sftp
+
+# disable dangerous SSH and block auth method
+AuthenticationMethods none  
+PermitTTY no
+AllowTcpForwarding no
+AllowAgentForwarding no
+X11Forwarding no
+
+
+
+# sftp only
+Match Group ReplaceByGroupName  
+    ChrootDirectory D:\ 
+    ForceCommand internal-sftp
+    PermitTTY no  #block full shell
+    AllowTcpForwarding no
+    X11Forwarding no
+    AuthenticationMethods password
+
+
