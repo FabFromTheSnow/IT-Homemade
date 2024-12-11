@@ -1,0 +1,103 @@
+#!/usr/sbin/nft -f
+# Title: nft config for nat forwarding mydomain.local
+# Author: Fab
+# Version: 1.6 (11-Dec-2024)
+
+# Clear all existing rules
+flush ruleset
+
+# Create tables
+add table filter
+add table nat
+
+# Default drop policies
+add chain filter input { type filter hook input priority 0; policy drop; }
+add chain filter output { type filter hook output priority 0; policy drop; }
+add chain filter forward { type filter hook forward priority 0; policy drop; }
+
+add chain nat prerout { type nat hook prerouting priority 0; }
+add chain nat postrout { type nat hook postrouting priority 0; }
+
+# Allow already established connections
+add rule filter input ct state established accept
+add rule filter output ct state established accept
+add rule filter forward ct state established accept
+
+# Allow loopback
+add rule filter input iifname "lo" accept
+add rule filter output oifname "lo" accept
+
+# Allow SSH from Poste Local to the firewall
+add rule filter input ip saddr 192.168.1.20 tcp dport 22 counter accept
+
+# Allow firewall outbound SSH if needed
+add rule filter output ip saddr 10.0.0.133 tcp dport 22 counter accept
+
+# Allow connections between Admin PC and AD
+add rule ip filter input iifname "enp0s10" ip saddr 10.0.0.138 ip daddr 10.0.0.137 tcp dport 22 accept
+add rule ip filter input ip saddr 10.0.0.138 ip daddr 10.0.0.130 tcp dport {3389, 88, 135, 389, 445, 636, 3268, 3269} accept
+add rule ip filter input ip saddr 10.0.0.138 ip daddr 10.0.0.130 udp dport {88, 389, 53} accept
+
+# Restrict web traffic to WAN http https only
+add rule filter forward ip saddr 10.0.0.128/30 ip daddr 0.0.0.0/0 tcp dport {80,443} accept
+add rule filter forward ip saddr 10.0.0.132/30 ip daddr 0.0.0.0/0 tcp dport {80,443} accept
+add rule filter forward ip saddr 10.0.0.136/30 ip daddr 0.0.0.0/0 tcp dport {80,443} accept
+add rule filter forward ip saddr 10.0.0.0/25   ip daddr 0.0.0.0/0 tcp dport {80,443} accept
+
+# Allow outgoing traffic on WAN interface
+add rule filter output oifname enp0s17 accept
+
+# Masquerade outbound traffic on WAN
+add rule nat postrout oifname enp0s17 masquerade
+
+# Allow ICMP echo-request (ping) from LAN subnets
+add rule ip filter input ip saddr 10.0.0.128/30 icmp type echo-request accept
+add rule ip filter input ip saddr 10.0.0.132/30 icmp type echo-request accept
+add rule ip filter input ip saddr 10.0.0.136/30 icmp type echo-request accept
+add rule ip filter input ip saddr 10.0.0.0/25   icmp type echo-request accept
+
+# DHCP rules
+# Allow DHCP traffic from clients on enp0s16
+add rule filter input iifname enp0s16 udp sport 68 udp dport 67 accept
+add rule filter input iifname enp0s16 udp sport 67 udp dport 68 accept
+
+# Allow DHCP traffic on enp0s8
+add rule filter input iifname enp0s8 udp sport 67 udp dport 68 accept
+add rule filter input iifname enp0s8 udp sport 68 udp dport 67 accept
+
+# Allow relayed DHCP traffic
+add rule filter forward iifname enp0s16 oifname enp0s8 udp dport 67 accept
+add rule filter forward iifname enp0s8 oifname enp0s16 udp dport 68 accept
+
+# Allow DHCP relay agent to send packets
+add rule filter output oifname enp0s8 udp dport 67 accept
+add rule filter output oifname enp0s16 udp dport 68 accept
+
+# Allow outgoing traffic on these interfaces
+add rule filter output oifname enp0s16 accept
+add rule filter output oifname enp0s8 accept
+
+# masquerade for this interfaces
+add rule nat postrout oifname enp0s8 masquerade
+add rule nat postrout oifname enp0s9 masquerade
+
+# Webserver nat to https
+add rule nat prerout iifname enp0s17 tcp dport 443 dnat to 10.0.0.134:443
+
+# Allow forwarded traffic to/from the webserver for DNATed traffic
+add rule filter forward iifname enp0s17 ip daddr 10.0.0.134 tcp dport 443 accept
+add rule filter forward oifname enp0s17 ip saddr 10.0.0.134 tcp sport 443 accept
+
+# Allow ad ports between vlan
+add rule ip filter forward ip saddr 10.0.0.0/25 ip daddr 10.0.0.128/30 tcp dport {88,389,445,3268,3269} accept
+add rule ip filter forward ip saddr 10.0.0.137 ip daddr 10.0.0.128/30 tcp dport {88,389,445,3268,3269} accept
+
+# Allow DNS between subnets
+add rule ip filter forward ip saddr 10.0.0.136/30 ip daddr 10.0.0.130 meta l4proto { tcp, udp } th dport 53 accept
+add rule ip filter forward ip saddr 10.0.0.0/25 ip daddr 10.0.0.130 meta l4proto { tcp, udp } th dport 53 accept
+# Allow outside dns for AD and webserver
+add rule ip filter forward ip saddr 10.0.0.130 ip daddr 1.1.1.1 udp dport 53 accept
+add rule ip filter forward ip saddr 10.0.0.134 ip daddr 1.1.1.1 udp dport 53 accept
+# Allow traffic to be forwarded between internal interfaces
+add rule ip filter forward iifname "enp0s16" oifname "enp0s8" accept
+add rule ip filter forward iifname "enp0s10" oifname "enp0s8" accept
