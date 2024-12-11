@@ -1,7 +1,7 @@
 #!/usr/sbin/nft -f
 # Title: nft config for nat forwarding mydomain.local
 # Author: Fab
-# Version: 1.5 (10-Dec-2024)
+# Version: 1.6 (11-Dec-2024)
 
 # Clear all existing rules
 flush ruleset
