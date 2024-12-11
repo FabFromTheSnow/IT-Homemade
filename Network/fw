@@ -1,0 +1,72 @@
+table ip filter {
+        chain input {
+                type filter hook input priority filter; policy drop;
+                ct state established accept
+                iifname "lo" accept
+                ip saddr 192.168.1.20 tcp dport 22 counter packets 1 bytes 52 accept
+                iifname "enp0s10" ip saddr 10.0.0.138 ip daddr 10.0.0.137 tcp dport 22 accept
+                ip saddr 10.0.0.138 ip daddr 10.0.0.130 tcp dport { 88, 135, 389, 445, 636, 3268, 3269, 3389 } accept
+                ip saddr 10.0.0.138 ip daddr 10.0.0.130 udp dport { 53, 88, 389 } accept
+                ip saddr 10.0.0.128/30 icmp type echo-request accept
+                ip saddr 10.0.0.132/30 icmp type echo-request accept
+                ip saddr 10.0.0.136/30 icmp type echo-request accept
+                ip saddr 10.0.0.0/25 icmp type echo-request accept
+                iifname "enp0s16" udp sport 68 udp dport 67 accept
+                iifname "enp0s16" udp sport 67 udp dport 68 accept
+                iifname "enp0s8" udp sport 67 udp dport 68 accept
+                iifname "enp0s8" udp sport 68 udp dport 67 accept
+        }
+
+        chain output {
+                type filter hook output priority filter; policy drop;
+                ct state established accept
+                oifname "lo" accept
+                ip saddr 10.0.0.133 tcp dport 22 counter packets 2 bytes 120 accept
+                oifname "enp0s17" accept
+                oifname "enp0s8" udp dport 67 accept
+                oifname "enp0s16" udp dport 68 accept
+                oifname "enp0s16" accept
+                oifname "enp0s8" accept
+        }
+
+        chain forward {
+                type filter hook forward priority filter; policy drop;
+                ct state established accept
+                ip saddr 10.0.0.128/30 ip daddr 0.0.0.0/0 tcp dport { 80, 443 } accept
+                ip saddr 10.0.0.132/30 ip daddr 0.0.0.0/0 tcp dport { 80, 443 } accept
+                ip saddr 10.0.0.136/30 ip daddr 0.0.0.0/0 tcp dport { 80, 443 } accept
+                ip saddr 10.0.0.0/25 ip daddr 0.0.0.0/0 tcp dport { 80, 443 } accept
+                iifname "enp0s16" oifname "enp0s8" udp dport 67 accept
+                iifname "enp0s8" oifname "enp0s16" udp dport 68 accept
+                iifname "enp0s17" ip daddr 10.0.0.134 tcp dport 443 accept
+                oifname "enp0s17" ip saddr 10.0.0.134 tcp sport 443 accept
+                ip saddr 10.0.0.0/25 ip daddr 10.0.0.128/30 tcp dport { 88, 389, 445, 3268, 3269 } accept
+                ip saddr 10.0.0.137 ip daddr 10.0.0.128/30 tcp dport { 88, 389, 445, 3268, 3269 } accept
+                ip saddr 10.0.0.128/30 ip daddr 10.0.0.0/25 tcp sport { 88, 389, 445, 3268, 3269 } accept
+                ip saddr 10.0.0.128/30 ip daddr 10.0.0.137 tcp sport { 88, 389, 445, 3268, 3269 } accept
+                ip saddr 10.0.0.0/25 ip daddr 10.0.0.128/30 udp dport 53 accept
+                ip saddr 10.0.0.130 ip daddr 10.0.0.0/25 udp sport 53 accept
+                ip saddr 10.0.0.0/25 ip daddr 10.0.0.130 tcp dport 53 accept
+                ip saddr 10.0.0.130 ip daddr 10.0.0.0/25 tcp sport 53 accept
+                ip saddr 10.0.0.136/30 ip daddr 10.0.0.130 udp dport 53 accept
+                ip saddr 10.0.0.136/30 ip daddr 10.0.0.130 tcp dport 53 accept
+                ip saddr 10.0.0.130 ip daddr 10.0.0.138 udp sport 53 accept
+                ip saddr 10.0.0.130 ip daddr 1.1.1.1 udp dport 53 accept
+                ip saddr 10.0.0.134 ip daddr 1.1.1.1 udp dport 53 accept
+                iifname "enp0s16" oifname "enp0s8" accept
+                iifname "enp0s10" oifname "enp0s8" accept
+        }
+}
+table ip nat {
+        chain prerout {
+                type nat hook prerouting priority filter; policy accept;
+                iifname "enp0s17" tcp dport 443 dnat to 10.0.0.134:443
+        }
+
+        chain postrout {
+                type nat hook postrouting priority filter; policy accept;
+                oifname "enp0s17" masquerade
+                oifname "enp0s8" masquerade
+                oifname "enp0s9" masquerade
+        }
+}
