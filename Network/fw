@@ -1,7 +1,7 @@
 #!/usr/sbin/nft -f
 # Title: nft config for nat forwarding mydomain.local
 # Author: Fab
-# Version: 1.6 (11-Dec-2024)
+# Version: 1.7 (12-Dec-2024)
 
 # Clear all existing rules
 flush ruleset
@@ -55,7 +55,7 @@ add rule ip filter input ip saddr 10.0.0.128/30 icmp type echo-request accept
 add rule ip filter input ip saddr 10.0.0.132/30 icmp type echo-request accept
 add rule ip filter input ip saddr 10.0.0.136/30 icmp type echo-request accept
 add rule ip filter input ip saddr 10.0.0.0/25   icmp type echo-request accept
-
+add rule ip filter forward meta iifname { "enp0s16", "enp0s8", "enp0s9", "enp0s10" } meta oifname { "enp0s16", "enp0s8", "enp0s9", "enp0s10" } ip protocol icmp accept
 # DHCP rules
 # Allow DHCP traffic from clients on enp0s16
 add rule filter input iifname enp0s16 udp sport 68 udp dport 67 accept
