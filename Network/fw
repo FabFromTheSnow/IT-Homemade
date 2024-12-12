@@ -1,7 +1,7 @@
 #!/usr/sbin/nft -f
 # Title: nft config for nat forwarding mydomain.local
 # Author: Fab
-# Version: 1.7 (12-Dec-2024)
+# Version: 1.8 (12-Dec-2024)
 
 # Clear all existing rules
 flush ruleset
@@ -37,6 +37,8 @@ add rule filter output ip saddr 10.0.0.133 tcp dport 22 counter accept
 add rule ip filter input iifname "enp0s10" ip saddr 10.0.0.138 ip daddr 10.0.0.137 tcp dport 22 accept
 add rule ip filter input ip saddr 10.0.0.138 ip daddr 10.0.0.130 tcp dport {3389, 88, 135, 389, 445, 636, 3268, 3269} accept
 add rule ip filter input ip saddr 10.0.0.138 ip daddr 10.0.0.130 udp dport {88, 389, 53} accept
+add rule ip filter input ip saddr 10.0.0.138 ip daddr 10.0.0.130 tcp dport 49152-65535 accept
+
 
 # Restrict web traffic to WAN http https only
 add rule filter forward ip saddr 10.0.0.128/30 ip daddr 0.0.0.0/0 tcp dport {80,443} accept
@@ -50,7 +52,7 @@ add rule filter output oifname enp0s17 accept
 # Masquerade outbound traffic on WAN
 add rule nat postrout oifname enp0s17 masquerade
 
-# Allow ICMP between LAN subnets
+# Allow ICMP echo-request (ping) from LAN subnets
 add rule ip filter forward meta iifname { "enp0s16", "enp0s8", "enp0s9", "enp0s10" } meta oifname { "enp0s16", "enp0s8", "enp0s9", "enp0s10" } ip protocol icmp accept
 # DHCP rules
 # Allow DHCP traffic from clients on enp0s16
