@@ -50,11 +50,7 @@ add rule filter output oifname enp0s17 accept
 # Masquerade outbound traffic on WAN
 add rule nat postrout oifname enp0s17 masquerade
 
-# Allow ICMP echo-request (ping) from LAN subnets
-add rule ip filter input ip saddr 10.0.0.128/30 icmp type echo-request accept
-add rule ip filter input ip saddr 10.0.0.132/30 icmp type echo-request accept
-add rule ip filter input ip saddr 10.0.0.136/30 icmp type echo-request accept
-add rule ip filter input ip saddr 10.0.0.0/25   icmp type echo-request accept
+# Allow ICMP between LAN subnets
 add rule ip filter forward meta iifname { "enp0s16", "enp0s8", "enp0s9", "enp0s10" } meta oifname { "enp0s16", "enp0s8", "enp0s9", "enp0s10" } ip protocol icmp accept
 # DHCP rules
 # Allow DHCP traffic from clients on enp0s16
