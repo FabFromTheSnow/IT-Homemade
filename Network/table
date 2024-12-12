@@ -3,14 +3,11 @@ table ip filter {
                 type filter hook input priority filter; policy drop;
                 ct state established accept
                 iifname "lo" accept
-                ip saddr 192.168.1.20 tcp dport 22 counter packets 1 bytes 52 accept
+                ip saddr 192.168.1.20 tcp dport 22 counter packets 0 bytes 0 accept
                 iifname "enp0s10" ip saddr 10.0.0.138 ip daddr 10.0.0.137 tcp dport 22 accept
                 ip saddr 10.0.0.138 ip daddr 10.0.0.130 tcp dport { 88, 135, 389, 445, 636, 3268, 3269, 3389 } accept
                 ip saddr 10.0.0.138 ip daddr 10.0.0.130 udp dport { 53, 88, 389 } accept
-                ip saddr 10.0.0.128/30 icmp type echo-request accept
-                ip saddr 10.0.0.132/30 icmp type echo-request accept
-                ip saddr 10.0.0.136/30 icmp type echo-request accept
-                ip saddr 10.0.0.0/25 icmp type echo-request accept
+                ip saddr 10.0.0.138 ip daddr 10.0.0.130 tcp dport 49152-65535 accept
                 iifname "enp0s16" udp sport 68 udp dport 67 accept
                 iifname "enp0s16" udp sport 67 udp dport 68 accept
                 iifname "enp0s8" udp sport 67 udp dport 68 accept
@@ -36,6 +33,7 @@ table ip filter {
                 ip saddr 10.0.0.132/30 ip daddr 0.0.0.0/0 tcp dport { 80, 443 } accept
                 ip saddr 10.0.0.136/30 ip daddr 0.0.0.0/0 tcp dport { 80, 443 } accept
                 ip saddr 10.0.0.0/25 ip daddr 0.0.0.0/0 tcp dport { 80, 443 } accept
+                iifname { "enp0s8", "enp0s9", "enp0s10", "enp0s16" } oifname { "enp0s8", "enp0s9", "enp0s10", "enp0s16" } ip protocol icmp accept
                 iifname "enp0s16" oifname "enp0s8" udp dport 67 accept
                 iifname "enp0s8" oifname "enp0s16" udp dport 68 accept
                 iifname "enp0s17" ip daddr 10.0.0.134 tcp dport 443 accept
@@ -62,6 +60,4 @@ table ip nat {
                 oifname "enp0s8" masquerade
                 oifname "enp0s9" masquerade
         }
-}
-table ip listruleset {
 }
