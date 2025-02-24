@@ -26,7 +26,7 @@ while ($reader.Read()) {
 $outputFile = "C:\Users\user\Documents\FreeSoc\list\BADipv4"
 
 # Write list in the file
-$ipAddresses | Out-File -FilePath $outputFile -Encoding UTF8
+$ipAddresses | Out-File -FilePath $outputFile -Encoding UTF8 -Append
 
 # Disconnect from sqlite db
 $reader.Close()
