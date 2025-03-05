@@ -13,7 +13,7 @@ $connection.Open()
 
 # query for ips added in last 24 hours
 $command = $connection.CreateCommand()
-$command.CommandText = "SELECT ipaddress FROM firewallrules WHERE status != '3' AND modifiedon >= datetime('now', '-1 day') AND modifiedon < datetime('now')" #ignore whitelist status
+$command.CommandText = "SELECT ipaddress FROM firewallrules WHERE status != '3' AND createdon >= datetime('now', '-1 day') AND createdon < datetime('now')" #ignore whitelist status
 $reader = $command.ExecuteReader()
 
 # extract ip and create list
