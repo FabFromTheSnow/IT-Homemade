@@ -1,6 +1,6 @@
 # powershell to sync IPs database from honeypot to other servers
 # downlaod sqlite here https://www.sqlite.org/download.html
-cd "C:\Users\Administrator\Documents\FreeSOC"
+cd "C:\Users\user\Documents\FreeSOC"
 git pull
 
 # Load sqlite dll
