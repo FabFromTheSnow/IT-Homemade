@@ -1,7 +1,11 @@
 [rule]
+author = "fab"
 description = """
-required fields only.
+required field only.
 """
+from = "now-6m" #this is the default value
+index = ["logs-*," "*endpoint-*"]
+
 name = "Suspicious Inter-Process Communication via Outlook"
 risk_score = 47
 severity = "medium"
