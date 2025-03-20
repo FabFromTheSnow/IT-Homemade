@@ -4,7 +4,7 @@ description = """
 required field only.
 """
 from = "now-6m" #this is the default value
-index = ["logs-*," "*endpoint-*"]
+index = ["logs-*", "*endpoint-*"]
 
 name = "Suspicious Inter-Process Communication via Outlook"
 risk_score = 47
