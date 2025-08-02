@@ -1,3 +1,5 @@
+#powershell script to manage file dehydration with storage sense, administrative tool can open file and therefore prevent file to be dehydrated
+#run this script on specific sharepoint sync user folder then access ms-settings:storagepolicies to manually trigger storage sense
 $folderPath = ""
 
 # Check if the path exists
