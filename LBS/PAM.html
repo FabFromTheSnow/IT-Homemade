@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartographie des Comptes Privilégiés</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+        
+        .search-box {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 300px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .server-selector {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .server-card {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e6ed;
+        }
+        
+        .server-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .server-title {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .server-info {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .accounts-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .accounts-table th {
+            background: #f8f9fa;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .accounts-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        .accounts-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .privilege-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        
+        .admin { background: #e74c3c; color: white; }
+        .root { background: #c0392b; color: white; }
+        .service { background: #3498db; color: white; }
+        .db { background: #9b59b6; color: white; }
+        .backup { background: #f39c12; color: white; }
+        .monitoring { background: #27ae60; color: white; }
+        .web { background: #16a085; color: white; }
+        .utilisateur { background: #34495e; color: white; }
+        
+        .editable-select {
+            padding: 8px;
+            border: 1px dashed #ddd;
+            border-radius: 4px;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            font-size: 14px;
+        }
+        
+        .editable-select:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .editable-select:focus {
+            outline: none;
+            border-color: #667eea;
+            border-style: solid;
+            background: white;
+        }
+        
+        .editable {
+            background: transparent;
+            border: 1px dashed #ddd;
+            padding: 8px;
+            border-radius: 4px;
+            min-height: 30px;
+            cursor: text;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+        
+        .editable:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .editable:focus {
+            outline: none;
+            border-color: #667eea;
+            border-style: solid;
+            background: white;
+        }
+        
+        .person-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .person-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .person-details {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        
+        .add-account-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin: 10px;
+        }
+        
+        .add-account-btn:hover {
+            background: #219a52;
+        }
+        
+        .delete-account-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .modal-title {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .option-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+        
+        .option-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+        
+        .option-text {
+            flex-grow: 1;
+        }
+        
+        .remove-option-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .add-option-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .option-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .option-section h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Cartographie des Comptes Privilégiés</h1>
+            <p class="subtitle">Gestion détaillée des accès privilégiés par serveur</p>
+        </div>
+        
+
+        
+        <div class="controls">
+            <button class="btn btn-primary" onclick="addServer()">➕ Nouveau serveur</button>
+            <button class="btn btn-secondary" onclick="manageOptions()">⚙️ Gérer les options</button>
+            <select class="server-selector" onchange="filterByServer(this.value)" id="serverFilter">
+                <option value="all">📁 Tous les serveurs</option>
+            </select>
+            <input type="text" class="search-box" placeholder="🔍 Rechercher..." onkeyup="filterContent(this.value)">
+            <button class="btn btn-primary" onclick="exportData()">📊 Exporter CSV</button>
+            <button class="btn btn-primary" onclick="exportToPDF()">📄 Exporter PDF</button>
+            <button class="btn btn-secondary" onclick="clearAll()">🗑️ Tout supprimer</button>
+        </div>
+        
+        <div id="serversContainer">
+            <!-- Les cartes de serveurs seront générées ici -->
+        </div>
+
+        <div class="signature-section" style="margin-top: 40px; padding: 25px; background: rgba(248, 249, 250, 0.9); border-radius: 15px; border: 2px solid #e9ecef;">
+            <h3 style="color: #2c3e50; margin-bottom: 20px; text-align: center;">✍️ Signatures et Validation</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div style="text-align: center;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">Créateur du Document</h4>
+                    <select id="creatorName" class="form-control" style="margin-bottom: 10px;" onchange="handleSignatureChange('creator', 'name', this.value)">
+                        <option value="">Sélectionner une personne...</option>
+                    </select>
+                    <select id="creatorFunction" class="form-control" style="margin-bottom: 10px;" onchange="handleSignatureChange('creator', 'function', this.value)">
+                        <option value="">Sélectionner une fonction...</option>
+                    </select>
+                    <input type="date" id="creatorDate" class="form-control">
+                </div>
+                <div style="text-align: center;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">Vérificateur</h4>
+                    <select id="verifierName" class="form-control" style="margin-bottom: 10px;" onchange="handleSignatureChange('verifier', 'name', this.value)">
+                        <option value="">Sélectionner une personne...</option>
+                    </select>
+                    <select id="verifierFunction" class="form-control" style="margin-bottom: 10px;" onchange="handleSignatureChange('verifier', 'function', this.value)">
+                        <option value="">Sélectionner une fonction...</option>
+                    </select>
+                    <input type="date" id="verifierDate" class="form-control">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour nouveau serveur -->
+    <div id="serverModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">➕ Nouveau Serveur</h3>
+                <button class="close-btn" onclick="closeServerModal()">&times;</button>
+            </div>
+            <form id="serverForm" onsubmit="saveServer(); return false;">
+                <div class="form-group">
+                    <label class="form-label">Nom du serveur *</label>
+                    <input type="text" id="serverName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Système d'exploitation *</label>
+                    <select id="serverOS" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Adresse IP *</label>
+                    <input type="text" id="serverIP" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Usage *</label>
+                    <select id="serverUsage" class="form-control" required></select>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeServerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer le serveur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal pour nouveau compte -->
+    <div id="accountModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">➕ Nouveau Compte</h3>
+                <button class="close-btn" onclick="closeAccountModal()">&times;</button>
+            </div>
+            <form id="accountForm" onsubmit="saveAccount(); return false;">
+                <input type="hidden" id="modalServerName">
+                <div class="form-group">
+                    <label class="form-label">Nom du compte *</label>
+                    <input type="text" id="accountName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type de compte *</label>
+                    <select id="accountType" class="form-control" required>
+                        <option value="admin">Administrateur</option>
+                        <option value="service">Service</option>
+                        <option value="utilisateur">Utilisateur</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Personne responsable *</label>
+                    <select id="realPerson" class="form-control" required>
+                        <option value="">Sélectionner une personne...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Département *</label>
+                    <select id="accountDepartment" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Utilisation *</label>
+                    <input type="text" id="accountPurpose" class="form-control" required>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAccountModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer le compte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal pour gestion des options -->
+    <div id="optionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Gestion des Options</h3>
+                <button class="close-btn" onclick="closeOptionsModal()">&times;</button>
+            </div>
+            
+            <div class="options-grid">
+                <div class="option-section">
+                    <h4>🖥️ Systèmes d'exploitation</h4>
+                    <div class="option-list" id="osOptionsList"></div>
+                    <div class="add-option-container">
+                        <input type="text" id="osNewOption" class="form-control" placeholder="Nouveau OS...">
+                        <button class="btn btn-primary" onclick="addOption('os')">Ajouter</button>
+                    </div>
+                </div>
+                
+                <div class="option-section">
+                    <h4>🎯 Types d'usage</h4>
+                    <div class="option-list" id="usageOptionsList"></div>
+                    <div class="add-option-container">
+                        <input type="text" id="usageNewOption" class="form-control" placeholder="Nouvel usage...">
+                        <button class="btn btn-primary" onclick="addOption('usage')">Ajouter</button>
+                    </div>
+                </div>
+                
+                <div class="option-section">
+                    <h4>🏢 Départements</h4>
+                    <div class="option-list" id="departmentOptionsList"></div>
+                    <div class="add-option-container">
+                        <input type="text" id="departmentNewOption" class="form-control" placeholder="Nouveau département...">
+                        <button class="btn btn-primary" onclick="addOption('department')">Ajouter</button>
+                    </div>
+                </div>
+                
+                <div class="option-section">
+                    <h4>👥 Fonctions</h4>
+                    <div class="option-list" id="functionOptionsList"></div>
+                    <div class="add-option-container">
+                        <input type="text" id="functionNewOption" class="form-control" placeholder="Nouvelle fonction...">
+                        <button class="btn btn-primary" onclick="addOption('function')">Ajouter</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-primary" onclick="closeOptionsModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        let serversData = {};
+        let currentFilter = 'all';
+        let searchTerm = '';
+        
+        // Options configurables
+        let osOptions = ['Windows Server 2019', 'Windows Server 2022', 'Linux Ubuntu 20.04', 'Linux Ubuntu 22.04', 'Linux CentOS 8', 'Linux RHEL 8', 'Linux RHEL 9', 'VMware ESXi'];
+        let usageOptions = ['portail', 'log', 'firewall', 'client', 'database', 'backup', 'monitoring', 'file-server'];
+        let departmentOptions = ['IT Infrastructure', 'IT Security', 'Dev Web', 'Dev Mobile', 'Base de données', 'Réseau', 'Support', 'Direction IT'];
+        let functionOptions = ['Administrateur Système', 'Ingénieur Sécurité', 'Développeur', 'DBA', 'Responsable IT', 'Chef de Projet', 'Technicien', 'Directeur IT'];
+        let peopleNames = ['Jean Dupont', 'Marie Martin', 'Pierre Bernard', 'Sophie Durand', 'Luc Moreau', 'Claire Petit', 'Marc Roux', 'Julie Blanc'];
+
+        function initializeData() {
+            // Données d'exemple
+            serversData = {
+                'SRV-WEB-01': {
+                    name: 'SRV-WEB-01',
+                    os: 'Windows Server 2019',
+                    ip: '192.168.1.10',
+                    usage: 'portail',
+                    accounts: [
+                        {
+                            id: 1,
+                            accountName: 'Administrator',
+                            type: 'admin',
+                            realPerson: 'Jean Dupont',
+                            department: 'IT Infrastructure',
+                            lastAccess: '2025-03-15',
+                            purpose: 'Administration système générale'
+                        },
+                        {
+                            id: 2,
+                            accountName: 'webapp_svc',
+                            type: 'service',
+                            realPerson: 'Marie Martin',
+                            department: 'Dev Web',
+                            lastAccess: '2025-04-10',
+                            purpose: 'Service application web'
+                        }
+                    ]
+                },
+                'SRV-LOG-01': {
+                    name: 'SRV-LOG-01',
+                    os: 'Linux Ubuntu 22.04',
+                    ip: '192.168.1.20',
+                    usage: 'log',
+                    accounts: [
+                        {
+                            id: 3,
+                            accountName: 'root',
+                            type: 'admin',
+                            realPerson: 'Pierre Bernard',
+                            department: 'IT Infrastructure',
+                            lastAccess: '2025-02-28',
+                            purpose: 'Administration système critique'
+                        },
+                        {
+                            id: 4,
+                            accountName: 'loguser',
+                            type: 'utilisateur',
+                            realPerson: 'Sophie Durand',
+                            department: 'IT Security',
+                            lastAccess: '2025-05-01',
+                            purpose: 'Consultation des logs'
+                        }
+                    ]
+                }
+            };
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            updateServerFilter();
+            updateSignatureSelects();
+            renderServers();
+        }
+
+
+
+        function updateServerFilter() {
+            const filter = document.getElementById('serverFilter');
+            filter.innerHTML = '<option value="all">📁 Tous les serveurs</option>';
+            
+            Object.keys(serversData).forEach(serverName => {
+                const option = document.createElement('option');
+                option.value = serverName;
+                option.textContent = `🖥️ ${serverName}`;
+                filter.appendChild(option);
+            });
+        }
+
+        function updateSignatureSelects() {
+            const creatorNameSelect = document.getElementById('creatorName');
+            const verifierNameSelect = document.getElementById('verifierName');
+            const creatorFunctionSelect = document.getElementById('creatorFunction');
+            const verifierFunctionSelect = document.getElementById('verifierFunction');
+            
+            // Mettre à jour les noms
+            [creatorNameSelect, verifierNameSelect].forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Sélectionner une personne...</option>';
+                peopleNames.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    option.selected = name === currentValue;
+                    select.appendChild(option);
+                });
+            });
+            
+            // Mettre à jour les fonctions
+            [creatorFunctionSelect, verifierFunctionSelect].forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Sélectionner une fonction...</option>';
+                functionOptions.forEach(func => {
+                    const option = document.createElement('option');
+                    option.value = func;
+                    option.textContent = func;
+                    option.selected = func === currentValue;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function handleSignatureChange(role, field, value) {
+            // Ici vous pourriez sauvegarder automatiquement les signatures
+            console.log(`${role} ${field} changed to: ${value}`);
+        }
+
+        function createEditableSelect(value, options, onChangeCallback) {
+            const select = document.createElement('select');
+            select.className = 'editable-select';
+            
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                optionElement.selected = option === value;
+                select.appendChild(optionElement);
+            });
+            
+            if (onChangeCallback) {
+                select.addEventListener('change', onChangeCallback);
+            }
+            
+            return select;
+        }
+
+        function renderServers() {
+            const container = document.getElementById('serversContainer');
+            container.innerHTML = '';
+
+            const serversToShow = currentFilter === 'all' ? 
+                Object.values(serversData) : 
+                [serversData[currentFilter]].filter(Boolean);
+
+            serversToShow.forEach(server => {
+                if (matchesSearch(server)) {
+                    const serverCard = createServerCard(server);
+                    container.appendChild(serverCard);
+                }
+            });
+        }
+
+        function createServerCard(server) {
+            const card = document.createElement('div');
+            card.className = 'server-card';
+            
+            const accountsRows = server.accounts.map(account => `
+                <tr>
+                    <td>
+                        <span class="privilege-badge ${account.type}">${account.accountName}</span>
+                    </td>
+                    <td>
+                        <div class="person-info">
+                            <div class="person-name">
+                                <select class="editable-select" onchange="updateAccountField('${server.name}', ${account.id}, 'realPerson', this.value)">
+                                    ${peopleNames.map(name => `<option value="${name}" ${name === account.realPerson ? 'selected' : ''}>${name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="person-details">
+                                <select class="editable-select" onchange="updateAccountField('${server.name}', ${account.id}, 'department', this.value)">
+                                    ${departmentOptions.map(dept => `<option value="${dept}" ${dept === account.department ? 'selected' : ''}>${dept}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <select class="editable-select" onchange="updateAccountType('${server.name}', ${account.id}, this.value)">
+                            <option value="admin" ${account.type === 'admin' ? 'selected' : ''}>Admin</option>
+                            <option value="service" ${account.type === 'service' ? 'selected' : ''}>Service</option>
+                            <option value="utilisateur" ${account.type === 'utilisateur' ? 'selected' : ''}>Utilisateur</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="date" class="editable-select" value="${account.lastAccess}" 
+                               onchange="updateAccountField('${server.name}', ${account.id}, 'lastAccess', this.value)"
+                               title="Date de réévaluation du compte">
+                    </td>
+                    <td>
+                        <div class="editable" contenteditable="true" 
+                             data-server="${server.name}" data-account="${account.id}" data-field="purpose">${account.purpose}</div>
+                    </td>
+                    <td>
+                        <button class="delete-account-btn" onclick="deleteAccount('${server.name}', ${account.id})">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            card.innerHTML = `
+                <div class="server-header">
+                    <div>
+                        <div class="server-title">${server.name}</div>
+                        <div class="server-info">
+                            <select class="editable-select" onchange="updateServerField('${server.name}', 'os', this.value)" style="background: rgba(255,255,255,0.2); color: black; border: 1px solid rgba(255,255,255,0.3);">
+                                ${osOptions.map(os => `<option value="${os}" ${os === server.os ? 'selected' : ''}>${os}</option>`).join('')}
+                            </select> | 
+                            <span class="editable" contenteditable="true" 
+                                  data-server="${server.name}" data-field="ip">${server.ip}</span> | 
+                            <select class="editable-select" onchange="updateServerField('${server.name}', 'usage', this.value)" style="background: rgba(255,255,255,0.2); color: black; border: 1px solid rgba(255,255,255,0.3);">
+                                ${usageOptions.map(usage => `<option value="${usage}" ${usage === server.usage ? 'selected' : ''}>${usage}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-secondary" onclick="deleteServer('${server.name}')" style="margin-right: 10px;">🗑️ Supprimer</button>
+                        <button class="add-account-btn" onclick="addAccount('${server.name}')">➕ Ajouter un compte</button>
+                    </div>
+                </div>
+                <table class="accounts-table">
+                    <thead>
+                        <tr>
+                            <th>Compte</th>
+                            <th>Personne Responsable</th>
+                            <th>Type</th>
+                            <th>Date Réévaluation</th>
+                            <th>Utilisation</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${accountsRows}
+                    </tbody>
+                </table>
+                <button class="add-account-btn" onclick="addAccount('${server.name}')">➕ Ajouter un compte</button>
+            `;
+            
+            return card;
+        }
+
+        function updateServerField(serverName, field, value) {
+            const server = serversData[serverName];
+            if (server) {
+                server[field] = value;
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        function updateAccountField(serverName, accountId, field, value) {
+            const server = serversData[serverName];
+            if (server) {
+                const account = server.accounts.find(acc => acc.id === accountId);
+                if (account) {
+                    account[field] = value;
+                    saveData();
+                }
+            }
+        }
+
+        function addServer() {
+            showServerModal();
+        }
+        
+        function showServerModal() {
+            const modal = document.getElementById('serverModal');
+            
+            // Remplir les listes déroulantes
+            document.getElementById('serverOS').innerHTML = osOptions.map(os => `<option value="${os}">${os}</option>`).join('');
+            document.getElementById('serverUsage').innerHTML = usageOptions.map(usage => `<option value="${usage}">${usage}</option>`).join('');
+            
+            modal.style.display = 'block';
+        }
+        
+        function closeServerModal() {
+            document.getElementById('serverModal').style.display = 'none';
+            document.getElementById('serverForm').reset();
+        }
+        
+        function saveServer() {
+            const serverName = document.getElementById('serverName').value.trim();
+            const serverOS = document.getElementById('serverOS').value;
+            const serverIP = document.getElementById('serverIP').value.trim();
+            const serverUsage = document.getElementById('serverUsage').value;
+            
+            if (!serverName || !serverIP) {
+                alert('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+            
+            if (serversData[serverName]) {
+                alert('Ce serveur existe déjà !');
+                return;
+            }
+            
+            serversData[serverName] = {
+                name: serverName,
+                os: serverOS,
+                ip: serverIP,
+                usage: serverUsage,
+                accounts: []
+            };
+            
+            updateDisplay();
+            saveData();
+            closeServerModal();
+        }
+
+        function manageOptions() {
+            showOptionsModal();
+        }
+        
+        function showOptionsModal() {
+            const modal = document.getElementById('optionsModal');
+            updateOptionsDisplay();
+            modal.style.display = 'block';
+        }
+        
+        function closeOptionsModal() {
+            document.getElementById('optionsModal').style.display = 'none';
+        }
+        
+        function updateOptionsDisplay() {
+            // OS Options
+            document.getElementById('osOptionsList').innerHTML = osOptions.map((os, index) => `
+                <div class="option-item">
+                    <span class="option-text">${os}</span>
+                    <button class="remove-option-btn" onclick="removeOption('os', ${index})">🗑️</button>
+                </div>
+            `).join('');
+            
+            // Usage Options
+            document.getElementById('usageOptionsList').innerHTML = usageOptions.map((usage, index) => `
+                <div class="option-item">
+                    <span class="option-text">${usage}</span>
+                    <button class="remove-option-btn" onclick="removeOption('usage', ${index})">🗑️</button>
+                </div>
+            `).join('');
+            
+            // Department Options
+            document.getElementById('departmentOptionsList').innerHTML = departmentOptions.map((dept, index) => `
+                <div class="option-item">
+                    <span class="option-text">${dept}</span>
+                    <button class="remove-option-btn" onclick="removeOption('department', ${index})">🗑️</button>
+                </div>
+            `).join('');
+            
+            // Function Options
+            document.getElementById('functionOptionsList').innerHTML = functionOptions.map((func, index) => `
+                <div class="option-item">
+                    <span class="option-text">${func}</span>
+                    <button class="remove-option-btn" onclick="removeOption('function', ${index})">🗑️</button>
+                </div>
+            `).join('');
+        }
+        
+        function addOption(type) {
+            const inputId = type + 'NewOption';
+            const newOption = document.getElementById(inputId).value.trim();
+            
+            if (!newOption) {
+                alert('Veuillez saisir une valeur');
+                return;
+            }
+            
+            switch(type) {
+                case 'os':
+                    if (!osOptions.includes(newOption)) {
+                        osOptions.push(newOption);
+                    }
+                    break;
+                case 'usage':
+                    if (!usageOptions.includes(newOption)) {
+                        usageOptions.push(newOption);
+                    }
+                    break;
+                case 'department':
+                    if (!departmentOptions.includes(newOption)) {
+                        departmentOptions.push(newOption);
+                    }
+                    break;
+                case 'function':
+                    if (!functionOptions.includes(newOption)) {
+                        functionOptions.push(newOption);
+                    }
+                    break;
+            }
+            
+            document.getElementById(inputId).value = '';
+            updateOptionsDisplay();
+            updateDisplay(); // Mettre à jour l'affichage principal
+            saveData();
+        }
+        
+        function removeOption(type, index) {
+            switch(type) {
+                case 'os':
+                    osOptions.splice(index, 1);
+                    break;
+                case 'usage':
+                    usageOptions.splice(index, 1);
+                    break;
+                case 'department':
+                    departmentOptions.splice(index, 1);
+                    break;
+                case 'function':
+                    functionOptions.splice(index, 1);
+                    break;
+            }
+            
+            updateOptionsDisplay();
+            updateDisplay(); // Mettre à jour l'affichage principal
+            saveData();
+        }
+        
+        function deleteServer(serverName) {
+            if (confirm(`Êtes-vous sûr de vouloir supprimer le serveur ${serverName} et tous ses comptes ?`)) {
+                delete serversData[serverName];
+                updateDisplay();
+                saveData();
+            }
+        }
+
+        function addAccount(serverName) {
+            showAccountModal(serverName);
+        }
+        
+        function showAccountModal(serverName) {
+            document.getElementById('modalServerName').value = serverName;
+            
+            // Remplir les listes déroulantes
+            document.getElementById('accountDepartment').innerHTML = departmentOptions.map(dept => `<option value="${dept}">${dept}</option>`).join('');
+            document.getElementById('realPerson').innerHTML = '<option value="">Sélectionner une personne...</option>' + 
+                peopleNames.map(name => `<option value="${name}">${name}</option>`).join('');
+            
+            const modal = document.getElementById('accountModal');
+            modal.style.display = 'block';
+        }
+        
+        function closeAccountModal() {
+            document.getElementById('accountModal').style.display = 'none';
+            document.getElementById('accountForm').reset();
+        }
+        
+        function saveAccount() {
+            const serverName = document.getElementById('modalServerName').value;
+            const accountName = document.getElementById('accountName').value.trim();
+            const accountType = document.getElementById('accountType').value;
+            const realPerson = document.getElementById('realPerson').value;
+            const department = document.getElementById('accountDepartment').value;
+            const purpose = document.getElementById('accountPurpose').value.trim();
+            
+            if (!accountName || !realPerson || !purpose) {
+                alert('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+            
+            const server = serversData[serverName];
+            if (!server) return;
+            
+            const newId = Math.max(...Object.values(serversData).flatMap(s => s.accounts.map(a => a.id)), 0) + 1;
+            const newAccount = {
+                id: newId,
+                accountName: accountName,
+                type: accountType,
+                realPerson: realPerson,
+                department: department,
+                lastAccess: new Date().toISOString().split('T')[0],
+                purpose: purpose
+            };
+            
+            server.accounts.push(newAccount);
+            updateDisplay();
+            saveData();
+            closeAccountModal();
+        }
+
+        function deleteAccount(serverName, accountId) {
+            if (confirm('Supprimer ce compte ?')) {
+                const server = serversData[serverName];
+                if (server) {
+                    server.accounts = server.accounts.filter(acc => acc.id !== accountId);
+                    updateDisplay();
+                    saveData();
+                }
+            }
+        }
+
+        function updateAccountType(serverName, accountId, newType) {
+            const server = serversData[serverName];
+            if (server) {
+                const account = server.accounts.find(acc => acc.id === accountId);
+                if (account) {
+                    account.type = newType;
+                    updateDisplay();
+                    saveData();
+                }
+            }
+        }
+
+        function filterByServer(serverName) {
+            currentFilter = serverName;
+            renderServers();
+        }
+
+        function filterContent(term) {
+            searchTerm = term.toLowerCase();
+            renderServers();
+        }
+
+        function matchesSearch(server) {
+            if (!searchTerm) return true;
+            
+            const searchableText = [
+                server.name,
+                server.os,
+                server.ip,
+                ...server.accounts.flatMap(acc => [
+                    acc.accountName,
+                    acc.realPerson,
+                    acc.department,
+                    acc.purpose
+                ])
+            ].join(' ').toLowerCase();
+            
+            return searchableText.includes(searchTerm);
+        }
+
+        function exportData() {
+            const headers = ['Serveur', 'OS', 'IP', 'Usage', 'Compte', 'Type', 'Personne Responsable', 'Service', 'Date Réévaluation', 'Utilisation'];
+            const csv = [headers.join(',')];
+            
+            Object.values(serversData).forEach(server => {
+                server.accounts.forEach(account => {
+                    const row = [
+                        server.name,
+                        server.os,
+                        server.ip,
+                        server.usage,
+                        account.accountName,
+                        account.type,
+                        account.realPerson,
+                        account.department,
+                        account.lastAccess,
+                        account.purpose
+                    ].map(field => `"${field}"`).join(',');
+                    csv.push(row);
+                });
+            });
+            
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cartographie_comptes_privileges_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            // En-tête du document
+            doc.setFontSize(20);
+            doc.setTextColor(40, 40, 40);
+            doc.text('CARTOGRAPHIE DES COMPTES PRIVILÉGIÉS', 20, 25);
+            
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Généré le : ${new Date().toLocaleDateString('fr-FR')}`, 20, 35);
+            
+            let yPosition = 50;
+            
+            // Statistiques générales
+            const totalServers = Object.keys(serversData).length;
+            const totalAccounts = Object.values(serversData).reduce((sum, server) => sum + server.accounts.length, 0);
+            const adminAccounts = Object.values(serversData).reduce((sum, server) => 
+                sum + server.accounts.filter(acc => acc.type === 'admin').length, 0);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(40, 40, 40);
+            doc.text('RÉSUMÉ EXÉCUTIF', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(10);
+            doc.text(`• Nombre total de serveurs : ${totalServers}`, 25, yPosition);
+            yPosition += 6;
+            doc.text(`• Nombre total de comptes : ${totalAccounts}`, 25, yPosition);
+            yPosition += 6;
+            doc.text(`• Comptes administrateurs : ${adminAccounts}`, 25, yPosition);
+            yPosition += 15;
+            
+            // Tableau détaillé par serveur
+            Object.values(serversData).forEach(server => {
+                if (yPosition > 170) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                doc.setFontSize(14);
+                doc.setTextColor(102, 126, 234);
+                doc.text(`SERVEUR: ${server.name}`, 20, yPosition);
+                yPosition += 8;
+                
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`OS: ${server.os} | IP: ${server.ip} | Usage: ${server.usage}`, 25, yPosition);
+                yPosition += 10;
+                
+                if (server.accounts.length > 0) {
+                    const tableData = server.accounts.map(account => [
+                        account.accountName,
+                        account.type.toUpperCase(),
+                        account.realPerson,
+                        account.department,
+                        account.lastAccess,
+                        account.purpose
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [['Compte', 'Type', 'Personne Responsable', 'Service', 'Date Réévaluation', 'Utilisation']],
+                        body: tableData,
+                        margin: { left: 20, right: 20 },
+                        styles: { 
+                            fontSize: 8,
+                            cellPadding: 3
+                        },
+                        headStyles: { 
+                            fillColor: [102, 126, 234],
+                            textColor: 255,
+                            fontStyle: 'bold'
+                        },
+                        alternateRowStyles: { fillColor: [245, 245, 245] },
+                        tableLineColor: [200, 200, 200],
+                        tableLineWidth: 0.1
+                    });
+                    
+                    yPosition = doc.lastAutoTable.finalY + 15;
+                } else {
+                    doc.setTextColor(150, 150, 150);
+                    doc.text('Aucun compte privilégié configuré', 25, yPosition);
+                    yPosition += 15;
+                }
+            });
+            
+            // Section signatures
+            if (yPosition > 150) {
+                doc.addPage();
+                yPosition = 20;
+            }
+            
+            yPosition += 10;
+            doc.setFontSize(14);
+            doc.setTextColor(40, 40, 40);
+            doc.text('SIGNATURES ET VALIDATION', 20, yPosition);
+            yPosition += 15;
+            
+            const creatorName = document.getElementById('creatorName').value || '[À compléter]';
+            const creatorFunction = document.getElementById('creatorFunction').value || '[À compléter]';
+            const creatorDate = document.getElementById('creatorDate').value || '[À compléter]';
+            const verifierName = document.getElementById('verifierName').value || '[À compléter]';
+            const verifierFunction = document.getElementById('verifierFunction').value || '[À compléter]';
+            const verifierDate = document.getElementById('verifierDate').value || '[À compléter]';
+            
+            // Créateur
+            doc.setFontSize(12);
+            doc.setTextColor(102, 126, 234);
+            doc.text('CRÉATEUR DU DOCUMENT', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(10);
+            doc.setTextColor(40, 40, 40);
+            doc.text(`Nom : ${creatorName}`, 25, yPosition);
+            yPosition += 6;
+            doc.text(`Fonction : ${creatorFunction}`, 25, yPosition);
+            yPosition += 6;
+            doc.text(`Date : ${creatorDate}`, 25, yPosition);
+            yPosition += 6;
+            doc.text('Signature : ____________________________', 25, yPosition);
+            yPosition += 20;
+            
+            // Vérificateur
+            doc.setFontSize(12);
+            doc.setTextColor(102, 126, 234);
+            doc.text('VÉRIFICATEUR', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(10);
+            doc.setTextColor(40, 40, 40);
+            doc.text(`Nom : ${verifierName}`, 25, yPosition);
+            yPosition += 6;
+            doc.text(`Fonction : ${verifierFunction}`, 25, yPosition);
+            yPosition += 6;
+            doc.text(`Date : ${verifierDate}`, 25, yPosition);
+            yPosition += 6;
+            doc.text('Signature : ____________________________', 25, yPosition);
+            
+            // Pied de page
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Page ${i} sur ${pageCount} - Document confidentiel`, 20, 200);
+                doc.text('Cartographie des Comptes Privilégiés', 200, 200);
+            }
+            
+            const fileName = `cartographie_comptes_privileges_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+        }
+
+        function saveData() {
+            console.log('Données sauvegardées:', serversData);
+        }
+
+        function clearAll() {
+            if (confirm('Êtes-vous sûr de vouloir supprimer toutes les données ?')) {
+                serversData = {};
+                updateDisplay();
+                saveData();
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('creatorDate').value = today;
+            document.getElementById('verifierDate').value = today;
+            
+            // Gestionnaire pour les champs éditables (texte libre)
+            document.addEventListener('blur', function(e) {
+                if (e.target.classList.contains('editable')) {
+                    const serverName = e.target.dataset.server;
+                    const accountId = parseInt(e.target.dataset.account);
+                    const field = e.target.dataset.field;
+                    const value = e.target.textContent;
+                    
+                    if (accountId) {
+                        updateAccountField(serverName, accountId, field, value);
+                    } else {
+                        updateServerField(serverName, field, value);
+                    }
+                }
+            }, true);
+            
+            // Fermer les modals en cliquant en dehors
+            window.addEventListener('click', function(e) {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
