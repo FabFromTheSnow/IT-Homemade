@@ -1,1387 +1,2141 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cartographie des Comptes Privilégiés</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartographie Comptes Privilégiés ISO27001</title>
+<style>
+    :root {
+        --primary: #667eea;
+        --primary-dark: #5a67d8;
+        --secondary: #764ba2;
+        --success: #48bb78;
+        --danger: #f56565;
+        --warning: #ed8936;
+        --info: #4299e1;
+        --dark: #2d3748;
+        --light: #f7fafc;
+        --gray: #718096;
+        --border: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        overflow: hidden;
+        color: var(--dark);
+    }
+
+    .header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: var(--shadow);
+        z-index: 1000;
+        position: relative;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .logo::before {
+        content: "🛡️";
+        font-size: 2rem;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+
+    .toolbar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: var(--shadow);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .btn:hover::before {
+        left: 100%;
+    }
+
+    .btn:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, var(--success), #38a169);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, var(--warning), #dd6b20);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, var(--danger), #e53e3e);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, var(--gray), #4a5568);
+    }
+
+    .main-container {
+        display: flex;
+        height: calc(100vh - 90px);
+        position: relative;
+    }
+
+    .sidebar {
+        width: 320px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        border-right: 1px solid var(--border);
+        padding: 1.5rem;
+        overflow-y: auto;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s ease;
+        z-index: 100;
+    }
+
+    .sidebar.collapsed {
+        transform: translateX(-300px);
+    }
+
+    .sidebar-toggle {
+        position: absolute;
+        top: 1rem;
+        right: -45px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        width: 45px;
+        height: 45px;
+        border-radius: 0 12px 12px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow);
+        z-index: 101;
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+    }
+
+    .sidebar-toggle:hover {
+        background: var(--primary-dark);
+        transform: scale(1.05);
+    }
+
+    .stats-panel {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(247, 250, 252, 0.8));
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stats-panel h3 {
+        margin: 0 0 1rem 0;
+        color: var(--primary);
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(237, 242, 247, 0.6));
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary);
+        display: block;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--gray);
+        margin-top: 0.25rem;
+        font-weight: 500;
+    }
+
+    .controls-section {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(247, 250, 252, 0.8));
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .controls-section h3 {
+        margin: 0 0 1rem 0;
+        color: var(--primary);
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .canvas-container {
+        flex: 1;
+        position: relative;
+        background: radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                    linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        backdrop-filter: blur(5px);
+        overflow: hidden;
+        cursor: grab;
+        border-radius: 0;
+    }
+
+    .canvas-container:active {
+        cursor: grabbing;
+    }
+
+    #container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+
+    svg {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+    }
+
+    .server {
+        fill: url(#serverGradient);
+        stroke: #8e44ad;
+        stroke-width: 2;
+        filter: drop-shadow(0 4px 8px rgba(142, 68, 173, 0.3));
+        transition: all 0.3s ease;
+    }
+
+    .server:hover {
+        filter: drop-shadow(0 6px 12px rgba(142, 68, 173, 0.4));
+        transform: scale(1.02);
+    }
+
+    .account {
+        fill: url(#accountGradient);
+        stroke: #2980b9;
+        stroke-width: 2;
+        filter: drop-shadow(0 4px 8px rgba(41, 128, 185, 0.3));
+        transition: all 0.3s ease;
+    }
+
+    .account:hover {
+        filter: drop-shadow(0 6px 12px rgba(41, 128, 185, 0.4));
+        transform: scale(1.02);
+    }
+
+    .identity {
+        fill: url(#identityGradient);
+        stroke: #27ae60;
+        stroke-width: 2;
+        filter: drop-shadow(0 4px 8px rgba(39, 174, 96, 0.3));
+        transition: all 0.3s ease;
+    }
+
+    .identity:hover {
+        filter: drop-shadow(0 6px 12px rgba(39, 174, 96, 0.4));
+        transform: scale(1.02);
+    }
+
+    .label {
+        font-size: 12px;
+        fill: white;
+        pointer-events: none;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(247, 250, 252, 0.9));
+        backdrop-filter: blur(20px);
+        padding: 2rem;
+        border-radius: 20px;
+        width: min(90vw, 480px);
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        animation: slideIn 0.3s ease;
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.9);
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
         }
-        
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-content h3 {
+        margin: 0 0 1.5rem 0;
+        color: var(--primary);
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--border);
+    }
+
+    .modal-content label {
+        display: block;
+        margin: 1.25rem 0 0.5rem 0;
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.95rem;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        width: 100%;
+        padding: 0.875rem;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content input:focus,
+    .modal-content select:focus,
+    .modal-content textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: rgba(255, 255, 255, 0.95);
+    }
+
+    .modal-content button {
+        margin: 1.5rem 0.5rem 0.5rem 0;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .modal-content button:first-of-type {
+        background: linear-gradient(135deg, var(--success), #38a169);
+        color: white;
+        box-shadow: var(--shadow);
+    }
+
+    .modal-content button:first-of-type:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .modal-content button:last-of-type {
+        background: linear-gradient(135deg, var(--gray), #4a5568);
+        color: white;
+        box-shadow: var(--shadow);
+    }
+
+    .modal-content button:last-of-type:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .zoom-controls {
+        position: absolute;
+        bottom: 2rem;
+        right: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        z-index: 100;
+    }
+
+    .zoom-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary);
+        box-shadow: var(--shadow);
+        transition: all 0.2s ease;
+    }
+
+    .zoom-btn:hover {
+        transform: scale(1.1);
+        background: white;
+        color: var(--primary-dark);
+    }
+
+    .help-tooltip {
+        position: absolute;
+        bottom: 2rem;
+        left: 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        font-size: 0.85rem;
+        color: var(--gray);
+        max-width: 280px;
+        animation: slideInLeft 0.5s ease;
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
         }
-        
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .connection-indicator {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: var(--success);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Scrollbar styling */
+    .sidebar::-webkit-scrollbar,
+    .modal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track,
+    .modal-content::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.1);
+        border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb,
+    .modal-content::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover,
+    .modal-content::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-dark);
+    }
+
+    @media (max-width: 768px) {
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            padding: 1rem;
+            flex-direction: column;
+            gap: 1rem;
         }
-        
-        h1 {
-            color: #2c3e50;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+
+        .logo {
+            font-size: 1.2rem;
         }
-        
-        .subtitle {
-            color: #7f8c8d;
-            font-size: 1.2em;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
+
+        .toolbar {
+            justify-content: center;
             flex-wrap: wrap;
-            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .sidebar {
+            width: 300px;
+        }
+
+        .modal-content {
+            width: 95vw;
+            padding: 1.5rem;
+            border-radius: 16px;
+        }
+
+        .zoom-controls, .help-tooltip {
+            display: none;
+        }
+
+        .main-container {
+            height: calc(100vh - 140px);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .toolbar {
+            gap: 0.25rem;
         }
         
         .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
         }
-        
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-secondary {
-            background: #95a5a6;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #7f8c8d;
-            transform: translateY(-2px);
-        }
-        
-        .search-box {
-            padding: 10px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            width: 300px;
-            transition: border-color 0.3s ease;
-        }
-        
-        .search-box:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .server-selector {
-            padding: 10px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            background: white;
-            cursor: pointer;
-        }
-        
-        .server-card {
-            background: white;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e0e6ed;
-        }
-        
-        .server-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .server-title {
-            font-size: 1.5em;
-            font-weight: 600;
-        }
-        
-        .server-info {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-        
-        .accounts-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .accounts-table th {
-            background: #f8f9fa;
-            padding: 15px 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #2c3e50;
-            border-bottom: 2px solid #e9ecef;
-        }
-        
-        .accounts-table td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            vertical-align: top;
-        }
-        
-        .accounts-table tr:hover {
-            background: rgba(102, 126, 234, 0.05);
-        }
-        
-        .privilege-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            margin: 2px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 500;
-        }
-        
-        .admin { background: #e74c3c; color: white; }
-        .root { background: #c0392b; color: white; }
-        .service { background: #3498db; color: white; }
-        .db { background: #9b59b6; color: white; }
-        .backup { background: #f39c12; color: white; }
-        .monitoring { background: #27ae60; color: white; }
-        .web { background: #16a085; color: white; }
-        .utilisateur { background: #34495e; color: white; }
-        
-        .editable-select {
-            padding: 8px;
-            border: 1px dashed #ddd;
-            border-radius: 4px;
-            background: transparent;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 150px;
-            font-size: 14px;
-        }
-        
-        .editable-select:hover {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.05);
-        }
-        
-        .editable-select:focus {
-            outline: none;
-            border-color: #667eea;
-            border-style: solid;
-            background: white;
-        }
-        
-        .editable {
-            background: transparent;
-            border: 1px dashed #ddd;
-            padding: 8px;
-            border-radius: 4px;
-            min-height: 30px;
-            cursor: text;
-            transition: all 0.3s ease;
-            min-width: 150px;
-        }
-        
-        .editable:hover {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.05);
-        }
-        
-        .editable:focus {
-            outline: none;
-            border-color: #667eea;
-            border-style: solid;
-            background: white;
-        }
-        
-        .person-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .person-name {
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .person-details {
-            font-size: 0.9em;
-            color: #7f8c8d;
-        }
-        
-        .add-account-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin: 10px;
-        }
-        
-        .add-account-btn:hover {
-            background: #219a52;
-        }
-        
-        .delete-account-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8em;
-            margin-left: 10px;
-        }
-        
-        .summary-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-        }
-        
-        .stat-label {
-            color: #7f8c8d;
-            margin-top: 5px;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        
-        .modal-content {
-            background-color: white;
-            margin: 2% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 800px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #eee;
-        }
-        
-        .modal-title {
-            font-size: 1.5em;
-            color: #2c3e50;
-            margin: 0;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-        }
-        
-        .close-btn:hover {
-            color: #333;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .option-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            background: #f8f9fa;
-        }
-        
-        .option-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            margin: 5px 0;
-            background: white;
-            border-radius: 5px;
-            border: 1px solid #eee;
-        }
-        
-        .option-text {
-            flex-grow: 1;
-        }
-        
-        .remove-option-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .add-option-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-        
-        .option-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-        }
-        
-        .option-section h4 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-        
-        .hidden {
-            display: none;
-        }
-    </style>
+    }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🔐 Cartographie des Comptes Privilégiés</h1>
-            <p class="subtitle">Gestion détaillée des accès privilégiés par serveur</p>
+
+<!-- Header -->
+<div class="header">
+    <div class="logo">
+        Cartographie ISO27001
+    </div>
+    <div class="toolbar">
+        <button class="btn btn-success" onclick="openAddServerModal()">
+            🖥️ Serveur
+        </button>
+        <button class="btn" onclick="openManageListsModal()">
+            ⚙️ Listes
+        </button>
+        <button class="btn btn-secondary" onclick="exportJSON()">
+            💾 JSON
+        </button>
+        <button class="btn" onclick="exportDrawio()">
+            📤 Draw.io
+        </button>
+        <button class="btn btn-success" onclick="generateAuditPDF()">
+            📋 PDF Audit
+        </button>
+        <button class="btn btn-warning" onclick="importJSON()">
+            📁 Importer
+        </button>
+        <button class="btn btn-danger" onclick="clearAll()">
+            🗑️ Effacer
+        </button>
+        <button class="btn btn-secondary" onclick="showHelp()">
+            ❓ Aide
+        </button>
+        <button class="btn btn-secondary" onclick="exportSVG()">
+            🖼️ SVG
+        </button>
+    </div>
+</div>
+
+<!-- Main Container -->
+<div class="main-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+            <span id="sidebarToggleIcon">◀</span>
+        </button>
+
+        <!-- Statistics -->
+        <div class="stats-panel" id="statsPanel">
+            <h3>📊 Statistiques</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-value" id="serverCount">0</span>
+                    <span class="stat-label">Serveurs</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="accountCount">0</span>
+                    <span class="stat-label">Comptes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="identityCount">0</span>
+                    <span class="stat-label">Identités</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="connectionCount">0</span>
+                    <span class="stat-label">Connexions</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-section">
+            <h3>🎛️ Contrôles rapides</h3>
+            <div class="control-group">
+                <button class="btn" onclick="centerView()" style="width: 100%; justify-content: center;">
+                    🎯 Centrer la vue
+                </button>
+                <button class="btn btn-secondary" onclick="resetZoom()" style="width: 100%; justify-content: center;">
+                    🔄 Réinitialiser zoom
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Help -->
+        <div class="controls-section">
+            <h3>💡 Raccourcis</h3>
+            <div style="font-size: 0.85rem; color: var(--gray); line-height: 1.4;">
+                <p><strong>Ctrl + Molette :</strong> Zoom</p>
+                <p><strong>Clic + Glisser :</strong> Déplacer</p>
+                <p><strong>Clic sur nœud :</strong> Ajouter enfant</p>
+                <p><strong>Croix rouge :</strong> Supprimer</p>
+            </div>
+        </div>
+
+        <!-- PDF Audit Section -->
+        <div class="controls-section">
+            <h3>📋 Audit & Conformité</h3>
+            <div class="control-group">
+                <button class="btn btn-success" onclick="generateAuditPDF()" style="width: 100%; justify-content: center;">
+                    📋 Générer PDF d'audit
+                </button>
+                <button class="btn btn-secondary" onclick="testPDFGeneration()" style="width: 100%; justify-content: center; font-size: 0.8rem; margin-top: 0.5rem;">
+                    🧪 Test PDF
+                </button>
+                <div style="font-size: 0.8rem; color: var(--gray); margin-top: 0.5rem; text-align: center;">
+                    Document officiel avec<br>section de signature
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <h3>ℹ️ État du système</h3>
+            <div style="font-size: 0.85rem; color: var(--gray); line-height: 1.4;">
+                <p id="systemStatus">🔄 Vérification...</p>
+                <p id="pdfLibStatus">📚 Librairies: <span id="libStatus">En cours...</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-container">
+        <div id="container">
+            <svg id="svgCanvas">
+                <defs>
+                    <linearGradient id="serverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#9b59b6;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#8e44ad;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="accountGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="identityGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#2ecc71;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#27ae60;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <!-- Zoom Controls -->
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()" title="Zoom avant">+</button>
+            <button class="zoom-btn" onclick="zoomOut()" title="Zoom arrière">−</button>
+            <button class="zoom-btn" onclick="resetZoom()" title="Vue d'ensemble">⌂</button>
+        </div>
+
+        <!-- Help Tooltip -->
+        <div class="help-tooltip">
+            <strong>🚀 Démarrage rapide</strong><br>
+            1. Ajoutez un serveur<br>
+            2. Cliquez dessus pour ajouter un compte<br>
+            3. Cliquez sur le compte pour ajouter une identité
+        </div>
+
+        <!-- Connection Indicator -->
+        <div class="connection-indicator" id="connectionIndicator">
+            ✓ Application prête
+        </div>
+    </div>
+</div>
+
+<!-- Modal Serveur -->
+<div class="modal" id="serverModal">
+    <div class="modal-content">
+        <h3>🖥️ Ajouter un serveur</h3>
+        <label>Nom du serveur :</label>
+        <input type="text" id="serverName" placeholder="Ex: SRV-WEB-01">
+        <label>Système d'exploitation :</label>
+        <select id="serverOS"></select>
+        <label>Logiciel principal :</label>
+        <select id="serverSoftware"></select>
+        <button onclick="confirmAddServer()">Ajouter le serveur</button>
+        <button onclick="closeModal('serverModal')">Annuler</button>
+    </div>
+</div>
+
+<!-- Modal Compte -->
+<div class="modal" id="accountModal">
+    <div class="modal-content">
+        <h3>👤 Ajouter un compte</h3>
+        <label>Nom du compte :</label>
+        <input type="text" id="accountName" placeholder="Ex: admin_db">
+        <label>Privilèges :</label>
+        <input type="text" id="accountRights" placeholder="Ex: Administrateur système">
+        <label>Type d'accès :</label>
+        <select id="accountTypeAccess"></select>
+        <label>Méthode d'authentification :</label>
+        <select id="accountAuthMethod"></select>
+        <label>Type de compte :</label>
+        <select id="accountType"></select>
+        <button onclick="confirmAddAccount()">Ajouter le compte</button>
+        <button onclick="closeModal('accountModal')">Annuler</button>
+    </div>
+</div>
+
+<!-- Modal Identité -->
+<div class="modal" id="identityModal">
+    <div class="modal-content">
+        <h3>🆔 Ajouter une identité</h3>
+        <label>Nom de la personne :</label>
+        <input type="text" id="identityName" placeholder="Ex: Jean Dupont">
+        <label>Rôle :</label>
+        <select id="identityRole"></select>
+        <label>Justification :</label>
+        <select id="identityJustification"></select>
+        <label>Date dernière revue :</label>
+        <input type="date" id="identityLastReview">
+        <label>Date prochaine revue :</label>
+        <input type="date" id="identityNextReview">
+        <button onclick="confirmAddIdentity()">Ajouter l'identité</button>
+        <button onclick="closeModal('identityModal')">Annuler</button>
+    </div>
+</div>
+
+<!-- Modal Listes -->
+<div class="modal" id="listsModal">
+    <div class="modal-content">
+        <h3>⚙️ Gérer les listes</h3>
+        <label>Systèmes d'exploitation (un par ligne) :</label>
+        <textarea id="osListEdit" rows="4" placeholder="Windows Server 2022&#10;Ubuntu 22.04&#10;Debian 12"></textarea>
+        <label>Logiciels (un par ligne) :</label>
+        <textarea id="softwareListEdit" rows="4" placeholder="SQL Server&#10;Apache&#10;Nginx"></textarea>
+        <label>Types d'accès (un par ligne) :</label>
+        <textarea id="typeAccessListEdit" rows="3" placeholder="Administration&#10;Lecture seule&#10;Application"></textarea>
+        <label>Méthodes d'authentification (un par ligne) :</label>
+        <textarea id="authMethodListEdit" rows="4" placeholder="MFA&#10;Mot de passe&#10;Certificat&#10;SSO"></textarea>
+        <label>Types de compte (un par ligne) :</label>
+        <textarea id="typeAccountListEdit" rows="4" placeholder="Personnel&#10;Partagé&#10;Service&#10;Application"></textarea>
+        <label>Rôles (un par ligne) :</label>
+        <textarea id="roleListEdit" rows="4" placeholder="Admin système&#10;DBA&#10;Support&#10;DevOps"></textarea>
+        <label>Justifications (un par ligne) :</label>
+        <textarea id="justificationListEdit" rows="3" placeholder="Projet X&#10;Maintenance&#10;Urgence"></textarea>
+        <button onclick="saveLists()">Enregistrer les modifications</button>
+        <button onclick="closeModal('listsModal')">Fermer</button>
+    </div>
+</div>
+
+<!-- Modal PDF Audit -->
+<div class="modal" id="pdfAuditModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <h3>📋 Génération PDF d'Audit ISO27001</h3>
+        
+        <div class="form-group">
+            <label>Titre du document :</label>
+            <input type="text" id="pdfTitle" class="form-control" value="Cartographie des Comptes Privilégiés" placeholder="Titre du rapport d'audit">
         </div>
         
-
+        <div class="form-group">
+            <label>Période d'audit :</label>
+            <div style="display: flex; gap: 1rem;">
+                <input type="date" id="auditDateFrom" class="form-control" style="flex: 1;">
+                <input type="date" id="auditDateTo" class="form-control" style="flex: 1;">
+            </div>
+        </div>
         
-        <div class="controls">
-            <button class="btn btn-primary" onclick="addServer()">➕ Nouveau serveur</button>
-            <button class="btn btn-secondary" onclick="manageOptions()">⚙️ Gérer les options</button>
-            <select class="server-selector" onchange="filterByServer(this.value)" id="serverFilter">
-                <option value="all">📁 Tous les serveurs</option>
+        <div class="form-group">
+            <label>Auditeur responsable :</label>
+            <input type="text" id="auditorName" class="form-control" placeholder="Nom de l'auditeur">
+        </div>
+        
+        <div class="form-group">
+            <label>Organisation :</label>
+            <input type="text" id="organizationName" class="form-control" placeholder="Nom de l'organisation">
+        </div>
+        
+        <div class="form-group">
+            <label>Commentaires audit :</label>
+            <textarea id="auditComments" class="form-control" rows="3" placeholder="Observations, recommandations, points d'attention..."></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Classification :</label>
+            <select id="documentClassification" class="form-control">
+                <option value="CONFIDENTIEL">🔒 CONFIDENTIEL</option>
+                <option value="RESTREINT">⚠️ RESTREINT</option>
+                <option value="INTERNE">🏢 USAGE INTERNE</option>
+                <option value="PUBLIC">🌐 PUBLIC</option>
             </select>
-            <input type="text" class="search-box" placeholder="🔍 Rechercher..." onkeyup="filterContent(this.value)">
-            <button class="btn btn-primary" onclick="exportData()">📊 Exporter CSV</button>
-            <button class="btn btn-primary" onclick="exportToPDF()">📄 Exporter PDF</button>
-            <button class="btn btn-secondary" onclick="clearAll()">🗑️ Tout supprimer</button>
         </div>
         
-        <div id="serversContainer">
-            <!-- Les cartes de serveurs seront générées ici -->
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="includeSignatureSection" checked>
+                Inclure section de signature pour validation
+            </label>
         </div>
-
-        <div class="signature-section" style="margin-top: 40px; padding: 25px; background: rgba(248, 249, 250, 0.9); border-radius: 15px; border: 2px solid #e9ecef;">
-            <h3 style="color: #2c3e50; margin-bottom: 20px; text-align: center;">✍️ Signatures et Validation</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                <div style="text-align: center;">
-                    <h4 style="color: #667eea; margin-bottom: 15px;">Créateur du Document</h4>
-                    <select id="creatorName" class="form-control" style="margin-bottom: 10px;" onchange="handleSignatureChange('creator', 'name', this.value)">
-                        <option value="">Sélectionner une personne...</option>
-                    </select>
-                    <select id="creatorFunction" class="form-control" style="margin-bottom: 10px;" onchange="handleSignatureChange('creator', 'function', this.value)">
-                        <option value="">Sélectionner une fonction...</option>
-                    </select>
-                    <input type="date" id="creatorDate" class="form-control">
-                </div>
-                <div style="text-align: center;">
-                    <h4 style="color: #667eea; margin-bottom: 15px;">Vérificateur</h4>
-                    <select id="verifierName" class="form-control" style="margin-bottom: 10px;" onchange="handleSignatureChange('verifier', 'name', this.value)">
-                        <option value="">Sélectionner une personne...</option>
-                    </select>
-                    <select id="verifierFunction" class="form-control" style="margin-bottom: 10px;" onchange="handleSignatureChange('verifier', 'function', this.value)">
-                        <option value="">Sélectionner une fonction...</option>
-                    </select>
-                    <input type="date" id="verifierDate" class="form-control">
-                </div>
-            </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="includeStatistics" checked>
+                Inclure statistiques détaillées
+            </label>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="includeMetadata" checked>
+                Inclure métadonnées techniques
+            </label>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="closeModal('pdfAuditModal')">Annuler</button>
+            <button class="btn btn-success" onclick="confirmGenerateAuditPDF()">📋 Générer le PDF</button>
         </div>
     </div>
+</div>
 
-    <!-- Modal pour nouveau serveur -->
-    <div id="serverModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">➕ Nouveau Serveur</h3>
-                <button class="close-btn" onclick="closeServerModal()">&times;</button>
-            </div>
-            <form id="serverForm" onsubmit="saveServer(); return false;">
-                <div class="form-group">
-                    <label class="form-label">Nom du serveur *</label>
-                    <input type="text" id="serverName" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Système d'exploitation *</label>
-                    <select id="serverOS" class="form-control" required></select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Adresse IP *</label>
-                    <input type="text" id="serverIP" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Usage *</label>
-                    <select id="serverUsage" class="form-control" required></select>
-                </div>
-                <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeServerModal()">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Créer le serveur</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<input type="file" id="fileInput" style="display:none" accept=".json">
 
-    <!-- Modal pour nouveau compte -->
-    <div id="accountModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">➕ Nouveau Compte</h3>
-                <button class="close-btn" onclick="closeAccountModal()">&times;</button>
-            </div>
-            <form id="accountForm" onsubmit="saveAccount(); return false;">
-                <input type="hidden" id="modalServerName">
-                <div class="form-group">
-                    <label class="form-label">Nom du compte *</label>
-                    <input type="text" id="accountName" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Type de compte *</label>
-                    <select id="accountType" class="form-control" required>
-                        <option value="admin">Administrateur</option>
-                        <option value="service">Service</option>
-                        <option value="utilisateur">Utilisateur</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Personne responsable *</label>
-                    <select id="realPerson" class="form-control" required>
-                        <option value="">Sélectionner une personne...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Département *</label>
-                    <select id="accountDepartment" class="form-control" required></select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Utilisation *</label>
-                    <input type="text" id="accountPurpose" class="form-control" required>
-                </div>
-                <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeAccountModal()">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Créer le compte</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+// Données existantes (gardées telles quelles)
+let data = { 
+    servers: [], 
+    settings: {
+        osList: ["Windows Server 2022", "Ubuntu 22.04", "Debian 12"],
+        softwareList: ["SQL Server", "Apache", "Nginx"],
+        typeAccessList: ["Administration", "Lecture seule", "Application"],
+        authMethodList: ["MFA", "Mot de passe", "Certificat", "SSO"],
+        typeAccountList: ["Personnel", "Partagé", "Service", "Application"],
+        roleList: ["Admin système", "DBA", "Support", "DevOps"],
+        justificationList: ["Projet X", "Maintenance", "Urgence"]
+    }
+};
+const svg = document.getElementById('svgCanvas');
 
-    <!-- Modal pour gestion des options -->
-    <div id="optionsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">⚙️ Gestion des Options</h3>
-                <button class="close-btn" onclick="closeOptionsModal()">&times;</button>
-            </div>
-            
-            <div class="options-grid">
-                <div class="option-section">
-                    <h4>🖥️ Systèmes d'exploitation</h4>
-                    <div class="option-list" id="osOptionsList"></div>
-                    <div class="add-option-container">
-                        <input type="text" id="osNewOption" class="form-control" placeholder="Nouveau OS...">
-                        <button class="btn btn-primary" onclick="addOption('os')">Ajouter</button>
-                    </div>
-                </div>
-                
-                <div class="option-section">
-                    <h4>🎯 Types d'usage</h4>
-                    <div class="option-list" id="usageOptionsList"></div>
-                    <div class="add-option-container">
-                        <input type="text" id="usageNewOption" class="form-control" placeholder="Nouvel usage...">
-                        <button class="btn btn-primary" onclick="addOption('usage')">Ajouter</button>
-                    </div>
-                </div>
-                
-                <div class="option-section">
-                    <h4>🏢 Départements</h4>
-                    <div class="option-list" id="departmentOptionsList"></div>
-                    <div class="add-option-container">
-                        <input type="text" id="departmentNewOption" class="form-control" placeholder="Nouveau département...">
-                        <button class="btn btn-primary" onclick="addOption('department')">Ajouter</button>
-                    </div>
-                </div>
-                
-                <div class="option-section">
-                    <h4>👥 Fonctions</h4>
-                    <div class="option-list" id="functionOptionsList"></div>
-                    <div class="add-option-container">
-                        <input type="text" id="functionNewOption" class="form-control" placeholder="Nouvelle fonction...">
-                        <button class="btn btn-primary" onclick="addOption('function')">Ajouter</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px;">
-                <button class="btn btn-primary" onclick="closeOptionsModal()">Fermer</button>
-            </div>
-        </div>
-    </div>
+// Variables pour les nouvelles fonctionnalités
+let sidebarCollapsed = false;
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+// ==== Fonctions modales et ajout (JavaScript original conservé) ====
+function openAddServerModal() {
+    document.getElementById('serverName').value = "";
+    populateSelect('serverOS', data.settings.osList, true);
+    populateSelect('serverSoftware', data.settings.softwareList, true);
+    document.getElementById('serverModal').style.display = 'flex';
+    updateConnectionIndicator('Ajout d\'un serveur...');
+}
 
-    <script>
-        let serversData = {};
-        let currentFilter = 'all';
-        let searchTerm = '';
-        
-        // Options configurables
-        let osOptions = ['Windows Server 2019', 'Windows Server 2022', 'Linux Ubuntu 20.04', 'Linux Ubuntu 22.04', 'Linux CentOS 8', 'Linux RHEL 8', 'Linux RHEL 9', 'VMware ESXi'];
-        let usageOptions = ['portail', 'log', 'firewall', 'client', 'database', 'backup', 'monitoring', 'file-server'];
-        let departmentOptions = ['IT Infrastructure', 'IT Security', 'Dev Web', 'Dev Mobile', 'Base de données', 'Réseau', 'Support', 'Direction IT'];
-        let functionOptions = ['Administrateur Système', 'Ingénieur Sécurité', 'Développeur', 'DBA', 'Responsable IT', 'Chef de Projet', 'Technicien', 'Directeur IT'];
-        let peopleNames = ['Jean Dupont', 'Marie Martin', 'Pierre Bernard', 'Sophie Durand', 'Luc Moreau', 'Claire Petit', 'Marc Roux', 'Julie Blanc'];
+function confirmAddServer() {
+    const server = {
+        id: Date.now(),
+        name: document.getElementById('serverName').value.trim(),
+        os: document.getElementById('serverOS').value || "",
+        software: document.getElementById('serverSoftware').value || "",
+        accounts: []
+    };
+    if (!server.name) return alert("Nom requis");
+    data.servers.push(server);
+    closeModal('serverModal');
+    render();
+    updateStats();
+    updateConnectionIndicator(`Serveur "${server.name}" ajouté`);
+    setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+}
 
-        function initializeData() {
-            // Données d'exemple
-            serversData = {
-                'SRV-WEB-01': {
-                    name: 'SRV-WEB-01',
-                    os: 'Windows Server 2019',
-                    ip: '192.168.1.10',
-                    usage: 'portail',
-                    accounts: [
-                        {
-                            id: 1,
-                            accountName: 'Administrator',
-                            type: 'admin',
-                            realPerson: 'Jean Dupont',
-                            department: 'IT Infrastructure',
-                            lastAccess: '2025-03-15',
-                            purpose: 'Administration système générale'
-                        },
-                        {
-                            id: 2,
-                            accountName: 'webapp_svc',
-                            type: 'service',
-                            realPerson: 'Marie Martin',
-                            department: 'Dev Web',
-                            lastAccess: '2025-04-10',
-                            purpose: 'Service application web'
-                        }
-                    ]
-                },
-                'SRV-LOG-01': {
-                    name: 'SRV-LOG-01',
-                    os: 'Linux Ubuntu 22.04',
-                    ip: '192.168.1.20',
-                    usage: 'log',
-                    accounts: [
-                        {
-                            id: 3,
-                            accountName: 'root',
-                            type: 'admin',
-                            realPerson: 'Pierre Bernard',
-                            department: 'IT Infrastructure',
-                            lastAccess: '2025-02-28',
-                            purpose: 'Administration système critique'
-                        },
-                        {
-                            id: 4,
-                            accountName: 'loguser',
-                            type: 'utilisateur',
-                            realPerson: 'Sophie Durand',
-                            department: 'IT Security',
-                            lastAccess: '2025-05-01',
-                            purpose: 'Consultation des logs'
-                        }
-                    ]
-                }
-            };
-            updateDisplay();
-        }
+let currentServerId = null;
+function openAddAccountModal(serverId) {
+    currentServerId = serverId;
+    document.getElementById('accountName').value = "";
+    document.getElementById('accountRights').value = "";
+    populateSelect('accountTypeAccess', data.settings.typeAccessList, true);
+    populateSelect('accountAuthMethod', data.settings.authMethodList, true);
+    populateSelect('accountType', data.settings.typeAccountList, true);
+    document.getElementById('accountModal').style.display = 'flex';
+    updateConnectionIndicator('Ajout d\'un compte...');
+}
 
-        function updateDisplay() {
-            updateServerFilter();
-            updateSignatureSelects();
-            renderServers();
-        }
+function confirmAddAccount() {
+    const server = data.servers.find(s => s.id === currentServerId);
+    const account = {
+        id: Date.now(),
+        name: document.getElementById('accountName').value.trim(),
+        rights: document.getElementById('accountRights').value.trim(),
+        typeAccess: document.getElementById('accountTypeAccess').value || "",
+        authMethod: document.getElementById('accountAuthMethod').value || "",
+        typeAccount: document.getElementById('accountType').value || "",
+        identities: []
+    };
+    if (!account.name) return alert("Nom requis");
+    server.accounts.push(account);
+    closeModal('accountModal');
+    render();
+    updateStats();
+    updateConnectionIndicator(`Compte "${account.name}" ajouté`);
+    setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+}
 
+let currentAccountId = null;
+function openAddIdentityModal(serverId, accountId) {
+    currentServerId = serverId;
+    currentAccountId = accountId;
+    document.getElementById('identityName').value = "";
+    populateSelect('identityRole', data.settings.roleList, true);
+    populateSelect('identityJustification', data.settings.justificationList, true);
+    document.getElementById('identityLastReview').value = "";
+    document.getElementById('identityNextReview').value = "";
+    document.getElementById('identityModal').style.display = 'flex';
+    updateConnectionIndicator('Ajout d\'une identité...');
+}
 
+function confirmAddIdentity() {
+    const server = data.servers.find(s => s.id === currentServerId);
+    const account = server.accounts.find(a => a.id === currentAccountId);
+    const identity = {
+        id: Date.now(),
+        name: document.getElementById('identityName').value.trim(),
+        role: document.getElementById('identityRole').value || "",
+        justification: document.getElementById('identityJustification').value || "",
+        lastReview: document.getElementById('identityLastReview').value || "",
+        nextReview: document.getElementById('identityNextReview').value || ""
+    };
+    if (!identity.name) return alert("Nom requis");
+    account.identities.push(identity);
+    closeModal('identityModal');
+    render();
+    updateStats();
+    updateConnectionIndicator(`Identité "${identity.name}" ajoutée`);
+    setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+}
 
-        function updateServerFilter() {
-            const filter = document.getElementById('serverFilter');
-            filter.innerHTML = '<option value="all">📁 Tous les serveurs</option>';
-            
-            Object.keys(serversData).forEach(serverName => {
-                const option = document.createElement('option');
-                option.value = serverName;
-                option.textContent = `🖥️ ${serverName}`;
-                filter.appendChild(option);
+// ==== Listes ====
+function openManageListsModal() {
+    document.getElementById('osListEdit').value = data.settings.osList.join("\n");
+    document.getElementById('softwareListEdit').value = data.settings.softwareList.join("\n");
+    document.getElementById('typeAccessListEdit').value = data.settings.typeAccessList.join("\n");
+    document.getElementById('authMethodListEdit').value = data.settings.authMethodList.join("\n");
+    document.getElementById('typeAccountListEdit').value = data.settings.typeAccountList.join("\n");
+    document.getElementById('roleListEdit').value = data.settings.roleList.join("\n");
+    document.getElementById('justificationListEdit').value = data.settings.justificationList.join("\n");
+    document.getElementById('listsModal').style.display = 'flex';
+}
+
+function saveLists() {
+    data.settings.osList = splitList('osListEdit');
+    data.settings.softwareList = splitList('softwareListEdit');
+    data.settings.typeAccessList = splitList('typeAccessListEdit');
+    data.settings.authMethodList = splitList('authMethodListEdit');
+    data.settings.typeAccountList = splitList('typeAccountListEdit');
+    data.settings.roleList = splitList('roleListEdit');
+    data.settings.justificationList = splitList('justificationListEdit');
+    closeModal('listsModal');
+    updateConnectionIndicator('Listes mises à jour');
+    setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+}
+
+function splitList(id) {
+    return document.getElementById(id).value.split("\n").map(s => s.trim()).filter(s => s);
+}
+
+// ==== Suppression ====
+function deleteNode(type, serverId, accountId, identityId) {
+    if (!confirm("Supprimer cet élément ?")) return;
+    if (type === 'server') {
+        data.servers = data.servers.filter(s => s.id !== serverId);
+    } else if (type === 'account') {
+        const server = data.servers.find(s => s.id === serverId);
+        server.accounts = server.accounts.filter(a => a.id !== accountId);
+    } else if (type === 'identity') {
+        const server = data.servers.find(s => s.id === serverId);
+        const account = server.accounts.find(a => a.id === accountId);
+        account.identities = account.identities.filter(i => i.id !== identityId);
+    }
+    render();
+    updateStats();
+    updateConnectionIndicator('Élément supprimé');
+    setTimeout(() => updateConnectionIndicator('✓ Prêt'), 1500);
+}
+
+// ==== UI ====
+function closeModal(id) { 
+    document.getElementById(id).style.display = 'none'; 
+}
+
+function populateSelect(id, items, addEmpty) {
+    const sel = document.getElementById(id);
+    sel.innerHTML = "";
+    if (addEmpty) sel.innerHTML += '<option value="">-- Aucun --</option>';
+    items.forEach(item => sel.innerHTML += `<option value="${item}">${item}</option>`);
+}
+
+// ==== Rendu (JavaScript original conservé) ====
+function render() {
+    svg.innerHTML = `
+        <defs>
+            <linearGradient id="serverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#9b59b6;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#8e44ad;stop-opacity:1" />
+            </linearGradient>
+            <linearGradient id="accountGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+            </linearGradient>
+            <linearGradient id="identityGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#2ecc71;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#27ae60;stop-opacity:1" />
+            </linearGradient>
+        </defs>
+    `;
+    
+    const hGap = 180, vGap = 130;
+    const calcWidth = node => {
+        if (node.identities) return Math.max(1, node.identities.length) * hGap;
+        if (node.accounts) return node.accounts.reduce((sum,a) => sum + calcWidth(a), 0) || hGap;
+        return hGap;
+    };
+    let xCursor = 0;
+    data.servers.forEach(server => {
+        const branchW = calcWidth(server);
+        const sX = xCursor + branchW/2, sY = 50;
+        let label = server.name;
+        if (server.os) label += `\n${server.os}`;
+        if (server.software) label += `\n${server.software}`;
+        drawNode(sX, sY, label, 'server', () => openAddAccountModal(server.id), () => deleteNode('server', server.id));
+        let accX = xCursor;
+        server.accounts.forEach(account => {
+            const accW = calcWidth(account);
+            const aX = accX + accW/2, aY = sY + vGap;
+            drawLine(sX, sY+20, aX, aY-20, '#8e44ad');
+            let accLabel = `${account.name}`;
+            if (account.rights) accLabel += `\n${account.rights}`;
+            if (account.typeAccess) accLabel += `\n${account.typeAccess}`;
+            if (account.authMethod) accLabel += `\n${account.authMethod}`;
+            if (account.typeAccount) accLabel += `\n${account.typeAccount}`;
+            drawNode(aX, aY, accLabel, 'account', () => openAddIdentityModal(server.id, account.id), () => deleteNode('account', server.id, account.id));
+            let idX = accX;
+            account.identities.forEach(identity => {
+                const iX = idX + hGap/2, iY = aY + vGap;
+                drawLine(aX, aY+20, iX, iY-20, '#27ae60');
+                let idLabel = `${identity.name}`;
+                if (identity.role) idLabel += `\n${identity.role}`;
+                if (identity.justification) idLabel += `\n${identity.justification}`;
+                if (identity.lastReview) idLabel += `\nDernière: ${identity.lastReview}`;
+                if (identity.nextReview) idLabel += `\nProchaine: ${identity.nextReview}`;
+                drawNode(iX, iY, idLabel, 'identity', null, () => deleteNode('identity', server.id, account.id, identity.id));
+                idX += hGap;
             });
-        }
+            accX += accW;
+        });
+        xCursor += branchW + hGap;
+    });
+}
 
-        function updateSignatureSelects() {
-            const creatorNameSelect = document.getElementById('creatorName');
-            const verifierNameSelect = document.getElementById('verifierName');
-            const creatorFunctionSelect = document.getElementById('creatorFunction');
-            const verifierFunctionSelect = document.getElementById('verifierFunction');
-            
-            // Mettre à jour les noms
-            [creatorNameSelect, verifierNameSelect].forEach(select => {
-                const currentValue = select.value;
-                select.innerHTML = '<option value="">Sélectionner une personne...</option>';
-                peopleNames.forEach(name => {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    option.selected = name === currentValue;
-                    select.appendChild(option);
-                });
+function drawNode(x, y, text, type, onClick, onDelete) {
+    const lines = text.split("\n");
+    const maxLineLength = Math.max(...lines.map(l => l.length));
+    const width = Math.min(240, Math.max(120, maxLineLength * 7));
+    const height = 20 + lines.length * 15;
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.style.cursor = onClick ? 'pointer' : 'default';
+    
+    const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    rect.setAttribute("x", x - width/2); 
+    rect.setAttribute("y", y - height/2);
+    rect.setAttribute("width", width); 
+    rect.setAttribute("height", height);
+    rect.setAttribute("rx", 12);
+    rect.setAttribute("class", type);
+    if (onClick) rect.addEventListener('click', onClick);
+    g.appendChild(rect);
+    
+    lines.forEach((line, i) => {
+        const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+        label.setAttribute("x", x);
+        label.setAttribute("y", y - (lines.length-1)*7 + i*15);
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("class", "label");
+        label.textContent = line;
+        g.appendChild(label);
+    });
+    
+    if (onDelete) {
+        const del = document.createElementNS("http://www.w3.org/2000/svg","text");
+        del.setAttribute("x", x + width/2 - 12);
+        del.setAttribute("y", y - height/2 + 15);
+        del.setAttribute("fill", "#ff4757");
+        del.setAttribute("font-size", "18");
+        del.setAttribute("font-weight", "bold");
+        del.setAttribute("cursor", "pointer");
+        del.textContent = "×";
+        del.addEventListener('click', e => { e.stopPropagation(); onDelete(); });
+        del.addEventListener('mouseenter', () => del.setAttribute('fill', '#ff3838'));
+        del.addEventListener('mouseleave', () => del.setAttribute('fill', '#ff4757'));
+        g.appendChild(del);
+    }
+    svg.appendChild(g);
+}
+
+function drawLine(x1,y1,x2,y2,color) {
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    const midY = (y1+y2)/2;
+    path.setAttribute("d", `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`);
+    path.setAttribute("stroke", color);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke-width", "2");
+    path.setAttribute("opacity", "0.7");
+    svg.appendChild(path);
+}
+
+// ==== JSON (JavaScript original conservé) ====
+function exportJSON() {
+    const blob = new Blob([JSON.stringify(data,null,2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; 
+    a.download = `cartographie-iso27001-${new Date().toISOString().split('T')[0]}.json`; 
+    a.click();
+    URL.revokeObjectURL(url);
+    updateConnectionIndicator('Export JSON réussi');
+    setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+}
+
+function importJSON() { 
+    document.getElementById('fileInput').click(); 
+}
+
+document.getElementById('fileInput').addEventListener('change', e => {
+    const file = e.target.files[0]; 
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => { 
+        try {
+            data = JSON.parse(ev.target.result); 
+            render(); 
+            updateStats();
+            updateConnectionIndicator('Import réussi');
+            setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+        } catch (error) {
+            alert('Erreur lors de l\'import: ' + error.message);
+            updateConnectionIndicator('Erreur d\'import');
+            setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+        }
+    };
+    reader.readAsText(file);
+});
+
+function exportDrawio() {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?><mxfile><diagram name="Privilege Map"><mxGraphModel><root>';
+    xml += '<mxCell id="0"/><mxCell id="1" parent="0"/>';
+    let cellId = 2;
+    data.servers.forEach((s,si) => {
+        const sid = cellId++;
+        xml += `<mxCell id="${sid}" value="${s.name}${s.os ? '\\n'+s.os : ''}${s.software ? '\\n'+s.software : ''}" style="shape=ellipse;fillColor=#8e44ad;fontColor=#FFFFFF;" vertex="1" parent="1"><mxGeometry x="${si*200}" y="0" width="160" height="60" as="geometry"/></mxCell>`;
+        s.accounts.forEach((a,ai) => {
+            const aid = cellId++;
+            xml += `<mxCell id="${aid}" value="${a.name}${a.rights ? '\\n'+a.rights : ''}${a.typeAccess ? '\\n'+a.typeAccess : ''}${a.authMethod ? '\\n'+a.authMethod : ''}${a.typeAccount ? '\\n'+a.typeAccount : ''}" style="shape=ellipse;fillColor=#2980b9;fontColor=#FFFFFF;" vertex="1" parent="1"><mxGeometry x="${si*200+ai*160}" y="150" width="160" height="60" as="geometry"/></mxCell>`;
+            xml += `<mxCell id="${cellId++}" edge="1" parent="1" source="${sid}" target="${aid}"><mxGeometry relative="1" as="geometry"/></mxCell>`;
+            a.identities.forEach((i,ii) => {
+                const iid = cellId++;
+                xml += `<mxCell id="${iid}" value="${i.name}${i.role ? '\\n'+i.role : ''}${i.justification ? '\\n'+i.justification : ''}${i.lastReview ? '\\n'+i.lastReview : ''}${i.nextReview ? '\\n'+i.nextReview : ''}" style="shape=ellipse;fillColor=#27ae60;fontColor=#FFFFFF;" vertex="1" parent="1"><mxGeometry x="${si*200+ai*160+ii*140}" y="300" width="160" height="60" as="geometry"/></mxCell>`;
+                xml += `<mxCell id="${cellId++}" edge="1" parent="1" source="${aid}" target="${iid}"><mxGeometry relative="1" as="geometry"/></mxCell>`;
             });
+        });
+    });
+    xml += '</root></mxGraphModel></diagram></mxfile>';
+    const blob = new Blob([xml], {type: 'application/xml'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; 
+    a.download = `cartographie-iso27001-${new Date().toISOString().split('T')[0]}.drawio`; 
+    a.click();
+    URL.revokeObjectURL(url);
+    updateConnectionIndicator('Export Draw.io réussi');
+    setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+}
+
+// geneerate svg
+function exportSVG() {
+    try {
+        const svgElement = document.getElementById('svgCanvas').cloneNode(true);
+
+        // Get CSS from the page
+        let css = '';
+        document.querySelectorAll('style').forEach(styleEl => {
+            css += styleEl.textContent;
+        });
+
+        // Create <style> element inside SVG with all CSS
+        const styleElement = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        styleElement.setAttribute('type', 'text/css');
+        styleElement.textContent = css;
+        svgElement.insertBefore(styleElement, svgElement.firstChild);
+
+        // Ensure namespaces
+        svgElement.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svgElement.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+        // Serialize
+        const serializer = new XMLSerializer();
+        let source = serializer.serializeToString(svgElement);
+        source = `<?xml version="1.0" encoding="UTF-8"?>\n` + source;
+
+        // Download
+        const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `cartographie-iso27001-${new Date().toISOString().split('T')[0]}.svg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        updateConnectionIndicator('Export SVG réussi');
+        setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+
+    } catch (error) {
+        console.error('Erreur export SVG:', error);
+        updateConnectionIndicator('❌ Erreur export SVG');
+        setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+        alert('Erreur lors de la génération du SVG: ' + error.message);
+    }
+}
+
+
+
+// ==== GÉNÉRATION PDF AUDIT ====
+function generateAuditPDF() {
+    // Définir les dates par défaut
+    const today = new Date();
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+    
+    document.getElementById('auditDateFrom').value = lastMonth.toISOString().split('T')[0];
+    document.getElementById('auditDateTo').value = today.toISOString().split('T')[0];
+    document.getElementById('auditorName').value = '';
+    document.getElementById('organizationName').value = '';
+    document.getElementById('auditComments').value = '';
+    
+    document.getElementById('pdfAuditModal').style.display = 'flex';
+    updateConnectionIndicator('Préparation PDF d\'audit...');
+}
+
+async function confirmGenerateAuditPDF() {
+    const { jsPDF } = window.jspdf;
+    
+    // Vérifier que les librairies sont disponibles
+    if (!window.jspdf) {
+        alert('Erreur: La librairie PDF n\'est pas chargée. Veuillez recharger la page.');
+        return;
+    }
+    
+    try {
+        updateConnectionIndicator('Génération du PDF en cours...');
+        closeModal('pdfAuditModal');
+        
+        // Petite pause pour laisser l'interface se mettre à jour
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Récupérer les données du formulaire
+        const pdfData = {
+            title: document.getElementById('pdfTitle').value || 'Cartographie des Comptes Privilégiés',
+            dateFrom: document.getElementById('auditDateFrom').value,
+            dateTo: document.getElementById('auditDateTo').value,
+            auditor: document.getElementById('auditorName').value || 'Non spécifié',
+            organization: document.getElementById('organizationName').value || 'Organisation',
+            comments: document.getElementById('auditComments').value || '',
+            classification: document.getElementById('documentClassification').value,
+            includeSignature: document.getElementById('includeSignatureSection').checked,
+            includeStats: document.getElementById('includeStatistics').checked,
+            includeMeta: document.getElementById('includeMetadata').checked
+        };
+        
+        updateConnectionIndicator('Création du document PDF...');
+        
+        // Créer le PDF
+        const pdf = new jsPDF('l', 'mm', 'a4'); // Format paysage
+        let yPosition = 20;
+        
+        // === EN-TÊTE DU DOCUMENT ===
+        pdf.setFontSize(20);
+        pdf.setFont(undefined, 'bold');
+        pdf.text(pdfData.title, 20, yPosition);
+        yPosition += 10;
+        
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'normal');
+        pdf.text(`Audit ISO27001 - ${pdfData.classification}`, 20, yPosition);
+        yPosition += 15;
+        
+        // Ligne de séparation
+        pdf.setDrawColor(102, 126, 234);
+        pdf.setLineWidth(0.5);
+        pdf.line(20, yPosition, 277, yPosition);
+        yPosition += 10;
+        
+        // === INFORMATIONS GÉNÉRALES ===
+        pdf.setFontSize(14);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('INFORMATIONS GÉNÉRALES', 20, yPosition);
+        yPosition += 8;
+        
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        pdf.text(`Organisation: ${pdfData.organization}`, 20, yPosition);
+        yPosition += 5;
+        pdf.text(`Auditeur responsable: ${pdfData.auditor}`, 20, yPosition);
+        yPosition += 5;
+        pdf.text(`Période d'audit: ${formatDate(pdfData.dateFrom)} au ${formatDate(pdfData.dateTo)}`, 20, yPosition);
+        yPosition += 5;
+        pdf.text(`Date de génération: ${formatDate(new Date().toISOString().split('T')[0])}`, 20, yPosition);
+        yPosition += 10;
+        
+        // === STATISTIQUES ===
+        if (pdfData.includeStats) {
+            const stats = calculateDetailedStats();
             
-            // Mettre à jour les fonctions
-            [creatorFunctionSelect, verifierFunctionSelect].forEach(select => {
-                const currentValue = select.value;
-                select.innerHTML = '<option value="">Sélectionner une fonction...</option>';
-                functionOptions.forEach(func => {
-                    const option = document.createElement('option');
-                    option.value = func;
-                    option.textContent = func;
-                    option.selected = func === currentValue;
-                    select.appendChild(option);
-                });
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('STATISTIQUES DÉTAILLÉES', 20, yPosition);
+            yPosition += 8;
+            
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'normal');
+            
+            pdf.text(`Nombre total de serveurs: ${stats.serverCount}`, 20, yPosition);
+            yPosition += 5;
+            pdf.text(`Nombre total de comptes: ${stats.accountCount}`, 20, yPosition);
+            yPosition += 5;
+            pdf.text(`Nombre total d'identités: ${stats.identityCount}`, 20, yPosition);
+            yPosition += 5;
+            pdf.text(`Taux de couverture identités: ${stats.identityCoverage}%`, 20, yPosition);
+            yPosition += 8;
+            
+            // Répartition par OS
+            pdf.setFont(undefined, 'bold');
+            pdf.text('Répartition par OS:', 20, yPosition);
+            yPosition += 5;
+            pdf.setFont(undefined, 'normal');
+            Object.entries(stats.osSummary).forEach(([os, count]) => {
+                pdf.text(`  • ${os}: ${count} serveur(s)`, 25, yPosition);
+                yPosition += 4;
             });
-        }
-
-        function handleSignatureChange(role, field, value) {
-            // Ici vous pourriez sauvegarder automatiquement les signatures
-            console.log(`${role} ${field} changed to: ${value}`);
-        }
-
-        function createEditableSelect(value, options, onChangeCallback) {
-            const select = document.createElement('select');
-            select.className = 'editable-select';
+            yPosition += 5;
             
-            options.forEach(option => {
-                const optionElement = document.createElement('option');
-                optionElement.value = option;
-                optionElement.textContent = option;
-                optionElement.selected = option === value;
-                select.appendChild(optionElement);
+            // Comptes par type
+            pdf.setFont(undefined, 'bold');
+            pdf.text('Répartition des comptes:', 20, yPosition);
+            yPosition += 5;
+            pdf.setFont(undefined, 'normal');
+            Object.entries(stats.accountTypes).forEach(([type, count]) => {
+                pdf.text(`  • ${type || 'Non spécifié'}: ${count} compte(s)`, 25, yPosition);
+                yPosition += 4;
             });
-            
-            if (onChangeCallback) {
-                select.addEventListener('change', onChangeCallback);
-            }
-            
-            return select;
-        }
-
-        function renderServers() {
-            const container = document.getElementById('serversContainer');
-            container.innerHTML = '';
-
-            const serversToShow = currentFilter === 'all' ? 
-                Object.values(serversData) : 
-                [serversData[currentFilter]].filter(Boolean);
-
-            serversToShow.forEach(server => {
-                if (matchesSearch(server)) {
-                    const serverCard = createServerCard(server);
-                    container.appendChild(serverCard);
-                }
-            });
-        }
-
-        function createServerCard(server) {
-            const card = document.createElement('div');
-            card.className = 'server-card';
-            
-            const accountsRows = server.accounts.map(account => `
-                <tr>
-                    <td>
-                        <span class="privilege-badge ${account.type}">${account.accountName}</span>
-                    </td>
-                    <td>
-                        <div class="person-info">
-                            <div class="person-name">
-                                <select class="editable-select" onchange="updateAccountField('${server.name}', ${account.id}, 'realPerson', this.value)">
-                                    ${peopleNames.map(name => `<option value="${name}" ${name === account.realPerson ? 'selected' : ''}>${name}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div class="person-details">
-                                <select class="editable-select" onchange="updateAccountField('${server.name}', ${account.id}, 'department', this.value)">
-                                    ${departmentOptions.map(dept => `<option value="${dept}" ${dept === account.department ? 'selected' : ''}>${dept}</option>`).join('')}
-                                </select>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <select class="editable-select" onchange="updateAccountType('${server.name}', ${account.id}, this.value)">
-                            <option value="admin" ${account.type === 'admin' ? 'selected' : ''}>Admin</option>
-                            <option value="service" ${account.type === 'service' ? 'selected' : ''}>Service</option>
-                            <option value="utilisateur" ${account.type === 'utilisateur' ? 'selected' : ''}>Utilisateur</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="date" class="editable-select" value="${account.lastAccess}" 
-                               onchange="updateAccountField('${server.name}', ${account.id}, 'lastAccess', this.value)"
-                               title="Date de réévaluation du compte">
-                    </td>
-                    <td>
-                        <div class="editable" contenteditable="true" 
-                             data-server="${server.name}" data-account="${account.id}" data-field="purpose">${account.purpose}</div>
-                    </td>
-                    <td>
-                        <button class="delete-account-btn" onclick="deleteAccount('${server.name}', ${account.id})">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
-
-            card.innerHTML = `
-                <div class="server-header">
-                    <div>
-                        <div class="server-title">${server.name}</div>
-                        <div class="server-info">
-                            <select class="editable-select" onchange="updateServerField('${server.name}', 'os', this.value)" style="background: rgba(255,255,255,0.2); color: black; border: 1px solid rgba(255,255,255,0.3);">
-                                ${osOptions.map(os => `<option value="${os}" ${os === server.os ? 'selected' : ''}>${os}</option>`).join('')}
-                            </select> | 
-                            <span class="editable" contenteditable="true" 
-                                  data-server="${server.name}" data-field="ip">${server.ip}</span> | 
-                            <select class="editable-select" onchange="updateServerField('${server.name}', 'usage', this.value)" style="background: rgba(255,255,255,0.2); color: black; border: 1px solid rgba(255,255,255,0.3);">
-                                ${usageOptions.map(usage => `<option value="${usage}" ${usage === server.usage ? 'selected' : ''}>${usage}</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <button class="btn btn-secondary" onclick="deleteServer('${server.name}')" style="margin-right: 10px;">🗑️ Supprimer</button>
-                        <button class="add-account-btn" onclick="addAccount('${server.name}')">➕ Ajouter un compte</button>
-                    </div>
-                </div>
-                <table class="accounts-table">
-                    <thead>
-                        <tr>
-                            <th>Compte</th>
-                            <th>Personne Responsable</th>
-                            <th>Type</th>
-                            <th>Date Réévaluation</th>
-                            <th>Utilisation</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${accountsRows}
-                    </tbody>
-                </table>
-                <button class="add-account-btn" onclick="addAccount('${server.name}')">➕ Ajouter un compte</button>
-            `;
-            
-            return card;
-        }
-
-        function updateServerField(serverName, field, value) {
-            const server = serversData[serverName];
-            if (server) {
-                server[field] = value;
-                saveData();
-                updateDisplay();
-            }
-        }
-
-        function updateAccountField(serverName, accountId, field, value) {
-            const server = serversData[serverName];
-            if (server) {
-                const account = server.accounts.find(acc => acc.id === accountId);
-                if (account) {
-                    account[field] = value;
-                    saveData();
-                }
-            }
-        }
-
-        function addServer() {
-            showServerModal();
-        }
-        
-        function showServerModal() {
-            const modal = document.getElementById('serverModal');
-            
-            // Remplir les listes déroulantes
-            document.getElementById('serverOS').innerHTML = osOptions.map(os => `<option value="${os}">${os}</option>`).join('');
-            document.getElementById('serverUsage').innerHTML = usageOptions.map(usage => `<option value="${usage}">${usage}</option>`).join('');
-            
-            modal.style.display = 'block';
-        }
-        
-        function closeServerModal() {
-            document.getElementById('serverModal').style.display = 'none';
-            document.getElementById('serverForm').reset();
-        }
-        
-        function saveServer() {
-            const serverName = document.getElementById('serverName').value.trim();
-            const serverOS = document.getElementById('serverOS').value;
-            const serverIP = document.getElementById('serverIP').value.trim();
-            const serverUsage = document.getElementById('serverUsage').value;
-            
-            if (!serverName || !serverIP) {
-                alert('Veuillez remplir tous les champs obligatoires');
-                return;
-            }
-            
-            if (serversData[serverName]) {
-                alert('Ce serveur existe déjà !');
-                return;
-            }
-            
-            serversData[serverName] = {
-                name: serverName,
-                os: serverOS,
-                ip: serverIP,
-                usage: serverUsage,
-                accounts: []
-            };
-            
-            updateDisplay();
-            saveData();
-            closeServerModal();
-        }
-
-        function manageOptions() {
-            showOptionsModal();
-        }
-        
-        function showOptionsModal() {
-            const modal = document.getElementById('optionsModal');
-            updateOptionsDisplay();
-            modal.style.display = 'block';
-        }
-        
-        function closeOptionsModal() {
-            document.getElementById('optionsModal').style.display = 'none';
-        }
-        
-        function updateOptionsDisplay() {
-            // OS Options
-            document.getElementById('osOptionsList').innerHTML = osOptions.map((os, index) => `
-                <div class="option-item">
-                    <span class="option-text">${os}</span>
-                    <button class="remove-option-btn" onclick="removeOption('os', ${index})">🗑️</button>
-                </div>
-            `).join('');
-            
-            // Usage Options
-            document.getElementById('usageOptionsList').innerHTML = usageOptions.map((usage, index) => `
-                <div class="option-item">
-                    <span class="option-text">${usage}</span>
-                    <button class="remove-option-btn" onclick="removeOption('usage', ${index})">🗑️</button>
-                </div>
-            `).join('');
-            
-            // Department Options
-            document.getElementById('departmentOptionsList').innerHTML = departmentOptions.map((dept, index) => `
-                <div class="option-item">
-                    <span class="option-text">${dept}</span>
-                    <button class="remove-option-btn" onclick="removeOption('department', ${index})">🗑️</button>
-                </div>
-            `).join('');
-            
-            // Function Options
-            document.getElementById('functionOptionsList').innerHTML = functionOptions.map((func, index) => `
-                <div class="option-item">
-                    <span class="option-text">${func}</span>
-                    <button class="remove-option-btn" onclick="removeOption('function', ${index})">🗑️</button>
-                </div>
-            `).join('');
-        }
-        
-        function addOption(type) {
-            const inputId = type + 'NewOption';
-            const newOption = document.getElementById(inputId).value.trim();
-            
-            if (!newOption) {
-                alert('Veuillez saisir une valeur');
-                return;
-            }
-            
-            switch(type) {
-                case 'os':
-                    if (!osOptions.includes(newOption)) {
-                        osOptions.push(newOption);
-                    }
-                    break;
-                case 'usage':
-                    if (!usageOptions.includes(newOption)) {
-                        usageOptions.push(newOption);
-                    }
-                    break;
-                case 'department':
-                    if (!departmentOptions.includes(newOption)) {
-                        departmentOptions.push(newOption);
-                    }
-                    break;
-                case 'function':
-                    if (!functionOptions.includes(newOption)) {
-                        functionOptions.push(newOption);
-                    }
-                    break;
-            }
-            
-            document.getElementById(inputId).value = '';
-            updateOptionsDisplay();
-            updateDisplay(); // Mettre à jour l'affichage principal
-            saveData();
-        }
-        
-        function removeOption(type, index) {
-            switch(type) {
-                case 'os':
-                    osOptions.splice(index, 1);
-                    break;
-                case 'usage':
-                    usageOptions.splice(index, 1);
-                    break;
-                case 'department':
-                    departmentOptions.splice(index, 1);
-                    break;
-                case 'function':
-                    functionOptions.splice(index, 1);
-                    break;
-            }
-            
-            updateOptionsDisplay();
-            updateDisplay(); // Mettre à jour l'affichage principal
-            saveData();
-        }
-        
-        function deleteServer(serverName) {
-            if (confirm(`Êtes-vous sûr de vouloir supprimer le serveur ${serverName} et tous ses comptes ?`)) {
-                delete serversData[serverName];
-                updateDisplay();
-                saveData();
-            }
-        }
-
-        function addAccount(serverName) {
-            showAccountModal(serverName);
-        }
-        
-        function showAccountModal(serverName) {
-            document.getElementById('modalServerName').value = serverName;
-            
-            // Remplir les listes déroulantes
-            document.getElementById('accountDepartment').innerHTML = departmentOptions.map(dept => `<option value="${dept}">${dept}</option>`).join('');
-            document.getElementById('realPerson').innerHTML = '<option value="">Sélectionner une personne...</option>' + 
-                peopleNames.map(name => `<option value="${name}">${name}</option>`).join('');
-            
-            const modal = document.getElementById('accountModal');
-            modal.style.display = 'block';
-        }
-        
-        function closeAccountModal() {
-            document.getElementById('accountModal').style.display = 'none';
-            document.getElementById('accountForm').reset();
-        }
-        
-        function saveAccount() {
-            const serverName = document.getElementById('modalServerName').value;
-            const accountName = document.getElementById('accountName').value.trim();
-            const accountType = document.getElementById('accountType').value;
-            const realPerson = document.getElementById('realPerson').value;
-            const department = document.getElementById('accountDepartment').value;
-            const purpose = document.getElementById('accountPurpose').value.trim();
-            
-            if (!accountName || !realPerson || !purpose) {
-                alert('Veuillez remplir tous les champs obligatoires');
-                return;
-            }
-            
-            const server = serversData[serverName];
-            if (!server) return;
-            
-            const newId = Math.max(...Object.values(serversData).flatMap(s => s.accounts.map(a => a.id)), 0) + 1;
-            const newAccount = {
-                id: newId,
-                accountName: accountName,
-                type: accountType,
-                realPerson: realPerson,
-                department: department,
-                lastAccess: new Date().toISOString().split('T')[0],
-                purpose: purpose
-            };
-            
-            server.accounts.push(newAccount);
-            updateDisplay();
-            saveData();
-            closeAccountModal();
-        }
-
-        function deleteAccount(serverName, accountId) {
-            if (confirm('Supprimer ce compte ?')) {
-                const server = serversData[serverName];
-                if (server) {
-                    server.accounts = server.accounts.filter(acc => acc.id !== accountId);
-                    updateDisplay();
-                    saveData();
-                }
-            }
-        }
-
-        function updateAccountType(serverName, accountId, newType) {
-            const server = serversData[serverName];
-            if (server) {
-                const account = server.accounts.find(acc => acc.id === accountId);
-                if (account) {
-                    account.type = newType;
-                    updateDisplay();
-                    saveData();
-                }
-            }
-        }
-
-        function filterByServer(serverName) {
-            currentFilter = serverName;
-            renderServers();
-        }
-
-        function filterContent(term) {
-            searchTerm = term.toLowerCase();
-            renderServers();
-        }
-
-        function matchesSearch(server) {
-            if (!searchTerm) return true;
-            
-            const searchableText = [
-                server.name,
-                server.os,
-                server.ip,
-                ...server.accounts.flatMap(acc => [
-                    acc.accountName,
-                    acc.realPerson,
-                    acc.department,
-                    acc.purpose
-                ])
-            ].join(' ').toLowerCase();
-            
-            return searchableText.includes(searchTerm);
-        }
-
-        function exportData() {
-            const headers = ['Serveur', 'OS', 'IP', 'Usage', 'Compte', 'Type', 'Personne Responsable', 'Service', 'Date Réévaluation', 'Utilisation'];
-            const csv = [headers.join(',')];
-            
-            Object.values(serversData).forEach(server => {
-                server.accounts.forEach(account => {
-                    const row = [
-                        server.name,
-                        server.os,
-                        server.ip,
-                        server.usage,
-                        account.accountName,
-                        account.type,
-                        account.realPerson,
-                        account.department,
-                        account.lastAccess,
-                        account.purpose
-                    ].map(field => `"${field}"`).join(',');
-                    csv.push(row);
-                });
-            });
-            
-            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `cartographie_comptes_privileges_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
-
-        function exportToPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape');
-            
-            // En-tête du document
-            doc.setFontSize(20);
-            doc.setTextColor(40, 40, 40);
-            doc.text('CARTOGRAPHIE DES COMPTES PRIVILÉGIÉS', 20, 25);
-            
-            doc.setFontSize(12);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Généré le : ${new Date().toLocaleDateString('fr-FR')}`, 20, 35);
-            
-            let yPosition = 50;
-            
-            // Statistiques générales
-            const totalServers = Object.keys(serversData).length;
-            const totalAccounts = Object.values(serversData).reduce((sum, server) => sum + server.accounts.length, 0);
-            const adminAccounts = Object.values(serversData).reduce((sum, server) => 
-                sum + server.accounts.filter(acc => acc.type === 'admin').length, 0);
-            
-            doc.setFontSize(14);
-            doc.setTextColor(40, 40, 40);
-            doc.text('RÉSUMÉ EXÉCUTIF', 20, yPosition);
             yPosition += 10;
-            
-            doc.setFontSize(10);
-            doc.text(`• Nombre total de serveurs : ${totalServers}`, 25, yPosition);
-            yPosition += 6;
-            doc.text(`• Nombre total de comptes : ${totalAccounts}`, 25, yPosition);
-            yPosition += 6;
-            doc.text(`• Comptes administrateurs : ${adminAccounts}`, 25, yPosition);
-            yPosition += 15;
-            
-            // Tableau détaillé par serveur
-            Object.values(serversData).forEach(server => {
-                if (yPosition > 170) {
-                    doc.addPage();
-                    yPosition = 20;
-                }
-                
-                doc.setFontSize(14);
-                doc.setTextColor(102, 126, 234);
-                doc.text(`SERVEUR: ${server.name}`, 20, yPosition);
-                yPosition += 8;
-                
-                doc.setFontSize(10);
-                doc.setTextColor(100, 100, 100);
-                doc.text(`OS: ${server.os} | IP: ${server.ip} | Usage: ${server.usage}`, 25, yPosition);
-                yPosition += 10;
-                
-                if (server.accounts.length > 0) {
-                    const tableData = server.accounts.map(account => [
-                        account.accountName,
-                        account.type.toUpperCase(),
-                        account.realPerson,
-                        account.department,
-                        account.lastAccess,
-                        account.purpose
-                    ]);
-                    
-                    doc.autoTable({
-                        startY: yPosition,
-                        head: [['Compte', 'Type', 'Personne Responsable', 'Service', 'Date Réévaluation', 'Utilisation']],
-                        body: tableData,
-                        margin: { left: 20, right: 20 },
-                        styles: { 
-                            fontSize: 8,
-                            cellPadding: 3
-                        },
-                        headStyles: { 
-                            fillColor: [102, 126, 234],
-                            textColor: 255,
-                            fontStyle: 'bold'
-                        },
-                        alternateRowStyles: { fillColor: [245, 245, 245] },
-                        tableLineColor: [200, 200, 200],
-                        tableLineWidth: 0.1
-                    });
-                    
-                    yPosition = doc.lastAutoTable.finalY + 15;
-                } else {
-                    doc.setTextColor(150, 150, 150);
-                    doc.text('Aucun compte privilégié configuré', 25, yPosition);
-                    yPosition += 15;
-                }
+        }
+        
+        // === CAPTURE D'ÉCRAN DE LA CARTOGRAPHIE ===
+        pdf.setFontSize(14);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('CARTOGRAPHIE VISUELLE', 20, yPosition);
+        yPosition += 10;
+        
+        // Générer la capture d'écran du SVG avec méthode alternative
+        let imgData = null;
+        let imgWidth = 240;
+        let imgHeight = 100;
+        
+        try {
+            // Méthode 1: Capturer le container complet
+            const container = document.getElementById('container');
+            const canvas = await html2canvas(container, {
+                backgroundColor: '#ffffff',
+                scale: 0.8,
+                logging: false,
+                useCORS: true,
+                allowTaint: true,
+                foreignObjectRendering: false,
+                imageTimeout: 5000,
+                removeContainer: false
             });
             
-            // Section signatures
-            if (yPosition > 150) {
-                doc.addPage();
+            imgData = canvas.toDataURL('image/png');
+            imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+        } catch (error) {
+            console.warn('Méthode 1 échouée, tentative méthode 2:', error);
+            
+            try {
+                // Méthode 2: Convertir SVG en canvas manuellement
+                const svgElement = document.getElementById('svgCanvas');
+                const svgData = new XMLSerializer().serializeToString(svgElement);
+                const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                const svgUrl = URL.createObjectURL(svgBlob);
+                
+                const img = new Image();
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = svgUrl;
+                });
+                
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = 800;
+                tempCanvas.height = 600;
+                const ctx = tempCanvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+                
+                imgData = tempCanvas.toDataURL('image/png');
+                imgHeight = (tempCanvas.height * imgWidth) / tempCanvas.width;
+                
+                URL.revokeObjectURL(svgUrl);
+                
+            } catch (error2) {
+                console.warn('Méthode 2 échouée, génération placeholder:', error2);
+                
+                // Méthode 3: Générer un placeholder avec les données
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = 800;
+                tempCanvas.height = 400;
+                const ctx = tempCanvas.getContext('2d');
+                
+                // Fond blanc
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                // Bordure
+                ctx.strokeStyle = '#667eea';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(10, 10, tempCanvas.width - 20, tempCanvas.height - 20);
+                
+                // Titre
+                ctx.fillStyle = '#2d3748';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Cartographie des Comptes Privilégiés', tempCanvas.width / 2, 50);
+                
+                // Statistiques visuelles
+                ctx.font = '16px Arial';
+                const stats = calculateDetailedStats();
+                let yPos = 100;
+                
+                ctx.fillText(` ${stats.serverCount} Serveurs`, tempCanvas.width / 2, yPos);
+                yPos += 30;
+                ctx.fillText(` ${stats.accountCount} Comptes`, tempCanvas.width / 2, yPos);
+                yPos += 30;
+                ctx.fillText(` ${stats.identityCount} Identités`, tempCanvas.width / 2, yPos);
+                yPos += 50;
+                
+                // Message d'information
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#718096';
+                ctx.fillText('Représentation simplifiée - Cartographie détaillée dans l\'inventaire ci-dessous', tempCanvas.width / 2, yPos);
+                
+                // Dessiner des éléments représentatifs
+                if (data.servers.length > 0) {
+                    ctx.fillStyle = '#8e44ad';
+                    let xPos = 100;
+                    data.servers.slice(0, 5).forEach((server, index) => {
+                        ctx.fillRect(xPos, 250, 80, 40);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(server.name.substring(0, 10), xPos + 40, 275);
+                        ctx.fillStyle = '#8e44ad';
+                        xPos += 120;
+                    });
+                }
+                
+                imgData = tempCanvas.toDataURL('image/png');
+                imgHeight = (tempCanvas.height * imgWidth) / tempCanvas.width;
+            }
+        }
+        
+        // Vérifier si on a assez de place sur la page
+        if (yPosition + imgHeight > 180) {
+            pdf.addPage();
+            yPosition = 20;
+        }
+        
+        if (imgData) {
+            pdf.addImage(imgData, 'PNG', 20, yPosition, imgWidth, imgHeight);
+            yPosition += imgHeight + 10;
+        } else {
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'italic');
+            pdf.text('Impossible de générer l\'image de la cartographie - Voir détails ci-dessous', 20, yPosition);
+            yPosition += 10;
+        }
+        
+        // === DÉTAIL DES ÉLÉMENTS ===
+        pdf.addPage();
+        yPosition = 20;
+        
+        pdf.setFontSize(14);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('INVENTAIRE DÉTAILLÉ', 20, yPosition);
+        yPosition += 10;
+        
+        data.servers.forEach((server, serverIndex) => {
+            // Vérifier si on a assez de place
+            if (yPosition > 180) {
+                pdf.addPage();
                 yPosition = 20;
             }
             
+            pdf.setFontSize(12);
+            pdf.setFont(undefined, 'bold');
+            pdf.text(`${serverIndex + 1}. SERVEUR: ${server.name}`, 20, yPosition);
+            yPosition += 6;
+            
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'normal');
+            if (server.os) {
+                pdf.text(`   OS: ${server.os}`, 25, yPosition);
+                yPosition += 4;
+            }
+            if (server.software) {
+                pdf.text(`   Logiciel: ${server.software}`, 25, yPosition);
+                yPosition += 4;
+            }
+            yPosition += 3;
+            
+            server.accounts.forEach((account, accountIndex) => {
+                pdf.setFont(undefined, 'bold');
+                pdf.text(`   ${serverIndex + 1}.${accountIndex + 1} Compte: ${account.name}`, 25, yPosition);
+                yPosition += 5;
+                
+                pdf.setFont(undefined, 'normal');
+                if (account.rights) pdf.text(`       Privilèges: ${account.rights}`, 30, yPosition), yPosition += 4;
+                if (account.typeAccess) pdf.text(`       Type d'accès: ${account.typeAccess}`, 30, yPosition), yPosition += 4;
+                if (account.authMethod) pdf.text(`       Authentification: ${account.authMethod}`, 30, yPosition), yPosition += 4;
+                if (account.typeAccount) pdf.text(`       Type compte: ${account.typeAccount}`, 30, yPosition), yPosition += 4;
+                
+                account.identities.forEach((identity, identityIndex) => {
+                    if (yPosition > 180) {
+                        pdf.addPage();
+                        yPosition = 20;
+                    }
+                    
+                    pdf.setFont(undefined, 'italic');
+                    pdf.text(`        Identite: ${identity.name}`, 35, yPosition);
+                    yPosition += 4;
+                    
+                    pdf.setFont(undefined, 'normal');
+                    if (identity.role) pdf.text(`          Rôle: ${identity.role}`, 40, yPosition), yPosition += 4;
+                    if (identity.justification) pdf.text(`          Justification: ${identity.justification}`, 40, yPosition), yPosition += 4;
+                    if (identity.lastReview) pdf.text(`          Dernière revue: ${formatDate(identity.lastReview)}`, 40, yPosition), yPosition += 4;
+                    if (identity.nextReview) pdf.text(`          Prochaine revue: ${formatDate(identity.nextReview)}`, 40, yPosition), yPosition += 4;
+                });
+                yPosition += 3;
+            });
+            yPosition += 5;
+        });
+        
+        // === COMMENTAIRES D'AUDIT ===
+        if (pdfData.comments) {
+            if (yPosition > 150) {
+                pdf.addPage();
+                yPosition = 20;
+            }
+            
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('OBSERVATIONS ET RECOMMANDATIONS', 20, yPosition);
+            yPosition += 8;
+            
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'normal');
+            const commentLines = pdf.splitTextToSize(pdfData.comments, 250);
+            commentLines.forEach(line => {
+                if (yPosition > 180) {
+                    pdf.addPage();
+                    yPosition = 20;
+                }
+                pdf.text(line, 20, yPosition);
+                yPosition += 5;
+            });
             yPosition += 10;
-            doc.setFontSize(14);
-            doc.setTextColor(40, 40, 40);
-            doc.text('SIGNATURES ET VALIDATION', 20, yPosition);
+        }
+        
+        // === SECTION SIGNATURE ===
+        if (pdfData.includeSignature) {
+            if (yPosition > 120) {
+                pdf.addPage();
+                yPosition = 20;
+            }
+            
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('VALIDATION ET SIGNATURES', 20, yPosition);
             yPosition += 15;
             
-            const creatorName = document.getElementById('creatorName').value || '[À compléter]';
-            const creatorFunction = document.getElementById('creatorFunction').value || '[À compléter]';
-            const creatorDate = document.getElementById('creatorDate').value || '[À compléter]';
-            const verifierName = document.getElementById('verifierName').value || '[À compléter]';
-            const verifierFunction = document.getElementById('verifierFunction').value || '[À compléter]';
-            const verifierDate = document.getElementById('verifierDate').value || '[À compléter]';
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'normal');
             
-            // Créateur
-            doc.setFontSize(12);
-            doc.setTextColor(102, 126, 234);
-            doc.text('CRÉATEUR DU DOCUMENT', 20, yPosition);
-            yPosition += 10;
+            // Tableau de signatures
+            const signatureBoxes = [
+                { title: 'AUDITEUR', role: 'Responsable de l\'audit' },
+                { title: 'RESPONSABLE SI', role: 'Responsable Sécurité des SI' },
+                { title: 'DIRECTION', role: 'Validation direction' }
+            ];
             
-            doc.setFontSize(10);
-            doc.setTextColor(40, 40, 40);
-            doc.text(`Nom : ${creatorName}`, 25, yPosition);
-            yPosition += 6;
-            doc.text(`Fonction : ${creatorFunction}`, 25, yPosition);
-            yPosition += 6;
-            doc.text(`Date : ${creatorDate}`, 25, yPosition);
-            yPosition += 6;
-            doc.text('Signature : ____________________________', 25, yPosition);
-            yPosition += 20;
-            
-            // Vérificateur
-            doc.setFontSize(12);
-            doc.setTextColor(102, 126, 234);
-            doc.text('VÉRIFICATEUR', 20, yPosition);
-            yPosition += 10;
-            
-            doc.setFontSize(10);
-            doc.setTextColor(40, 40, 40);
-            doc.text(`Nom : ${verifierName}`, 25, yPosition);
-            yPosition += 6;
-            doc.text(`Fonction : ${verifierFunction}`, 25, yPosition);
-            yPosition += 6;
-            doc.text(`Date : ${verifierDate}`, 25, yPosition);
-            yPosition += 6;
-            doc.text('Signature : ____________________________', 25, yPosition);
-            
-            // Pied de page
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(150, 150, 150);
-                doc.text(`Page ${i} sur ${pageCount} - Document confidentiel`, 20, 200);
-                doc.text('Cartographie des Comptes Privilégiés', 200, 200);
-            }
-            
-            const fileName = `cartographie_comptes_privileges_${new Date().toISOString().split('T')[0]}.pdf`;
-            doc.save(fileName);
-        }
-
-        function saveData() {
-            console.log('Données sauvegardées:', serversData);
-        }
-
-        function clearAll() {
-            if (confirm('Êtes-vous sûr de vouloir supprimer toutes les données ?')) {
-                serversData = {};
-                updateDisplay();
-                saveData();
-            }
-        }
-
-        // Initialisation
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeData();
-            
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('creatorDate').value = today;
-            document.getElementById('verifierDate').value = today;
-            
-            // Gestionnaire pour les champs éditables (texte libre)
-            document.addEventListener('blur', function(e) {
-                if (e.target.classList.contains('editable')) {
-                    const serverName = e.target.dataset.server;
-                    const accountId = parseInt(e.target.dataset.account);
-                    const field = e.target.dataset.field;
-                    const value = e.target.textContent;
-                    
-                    if (accountId) {
-                        updateAccountField(serverName, accountId, field, value);
-                    } else {
-                        updateServerField(serverName, field, value);
-                    }
-                }
-            }, true);
-            
-            // Fermer les modals en cliquant en dehors
-            window.addEventListener('click', function(e) {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => {
-                    if (e.target === modal) {
-                        modal.style.display = 'none';
-                    }
-                });
+            signatureBoxes.forEach((box, index) => {
+                const xPos = 20 + (index * 85);
+                
+                // Cadre de signature
+                pdf.setDrawColor(0, 0, 0);
+                pdf.setLineWidth(0.3);
+                pdf.rect(xPos, yPosition, 80, 40);
+                
+                pdf.setFont(undefined, 'bold');
+                pdf.text(box.title, xPos + 2, yPosition + 5);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(box.role, xPos + 2, yPosition + 10);
+                
+                pdf.text('Nom:', xPos + 2, yPosition + 20);
+                pdf.text('Date:', xPos + 2, yPosition + 25);
+                pdf.text('Signature:', xPos + 2, yPosition + 35);
             });
+            yPosition += 50;
+        }
+        
+        // === MÉTADONNÉES TECHNIQUES ===
+        if (pdfData.includeMeta) {
+            if (yPosition > 160) {
+                pdf.addPage();
+                yPosition = 20;
+            }
+            
+            pdf.setFontSize(12);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('MÉTADONNÉES TECHNIQUES', 20, yPosition);
+            yPosition += 8;
+            
+            pdf.setFontSize(8);
+            pdf.setFont(undefined, 'normal');
+            pdf.text(`Généré par: Cartographie ISO27001 v2.0`, 20, yPosition);
+            yPosition += 4;
+            pdf.text(`Hash du document: ${generateDocumentHash()}`, 20, yPosition);
+            yPosition += 4;
+            pdf.text(`Nombre total d'éléments traités: ${data.servers.length + calculateDetailedStats().accountCount + calculateDetailedStats().identityCount}`, 20, yPosition);
+        }
+        
+        // === PIED DE PAGE SUR TOUTES LES PAGES ===
+        const pageCount = pdf.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            pdf.setPage(i);
+            pdf.setFontSize(8);
+            pdf.setFont(undefined, 'normal');
+            pdf.text(`${pdfData.classification} - Page ${i}/${pageCount}`, 20, 200);
+            pdf.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, 200, 200);
+        }
+        
+        // Sauvegarder le PDF
+        const fileName = `audit-iso27001-${pdfData.organization.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
+        pdf.save(fileName);
+        
+        updateConnectionIndicator('PDF d\'audit généré avec succès ✓');
+        setTimeout(() => updateConnectionIndicator('✓ Prêt'), 3000);
+        
+        // Afficher un message de succès détaillé
+        const successMsg = `PDF d'audit généré avec succès !\n\nFichier: ${fileName}\nPages: ${pageCount}\nÉléments: ${data.servers.length} serveurs, ${calculateDetailedStats().accountCount} comptes, ${calculateDetailedStats().identityCount} identités\n\nLe document est prêt pour signature et archivage.`;
+        setTimeout(() => alert(successMsg), 500);
+        
+    } catch (error) {
+        console.error('Erreur lors de la génération du PDF:', error);
+        updateConnectionIndicator('❌ Erreur génération PDF');
+        setTimeout(() => updateConnectionIndicator('✓ Prêt'), 3000);
+        
+        const errorMsg = `Erreur lors de la génération du PDF:\n\n${error.message}\n\nVeuillez vérifier:\n• Que des données sont présentes dans la cartographie\n• Votre navigateur supporte les fonctions PDF\n• Réessayez dans quelques secondes`;
+        alert(errorMsg);
+    }
+}
+
+// Fonctions utilitaires pour le PDF
+function formatDate(dateString) {
+    if (!dateString) return 'Non spécifié';
+    return new Date(dateString).toLocaleDateString('fr-FR');
+}
+
+function calculateDetailedStats() {
+    const serverCount = data.servers.length;
+    const accountCount = data.servers.reduce((total, server) => total + server.accounts.length, 0);
+    const identityCount = data.servers.reduce((total, server) => 
+        total + server.accounts.reduce((acc, account) => acc + account.identities.length, 0), 0);
+    
+    const accountsWithIdentities = data.servers.reduce((total, server) => 
+        total + server.accounts.filter(account => account.identities.length > 0).length, 0);
+    
+    const identityCoverage = accountCount > 0 ? Math.round((accountsWithIdentities / accountCount) * 100) : 0;
+    
+    // Statistiques par OS
+    const osSummary = {};
+    data.servers.forEach(server => {
+        const os = server.os || 'Non spécifié';
+        osSummary[os] = (osSummary[os] || 0) + 1;
+    });
+    
+    // Statistiques par type de compte
+    const accountTypes = {};
+    data.servers.forEach(server => {
+        server.accounts.forEach(account => {
+            const type = account.typeAccount || 'Non spécifié';
+            accountTypes[type] = (accountTypes[type] || 0) + 1;
         });
-    </script>
+    });
+    
+    return {
+        serverCount,
+        accountCount,
+        identityCount,
+        identityCoverage,
+        osSummary,
+        accountTypes
+    };
+}
+
+// Test de génération PDF simple (fonction de débogage)
+async function testPDFGeneration() {
+    const { jsPDF } = window.jspdf;
+    
+    if (!window.jspdf) {
+        alert(' Librairie PDF non disponible');
+        return;
+    }
+    
+    try {
+        const pdf = new jsPDF();
+        pdf.setFontSize(16);
+        pdf.text('Test PDF - Cartographie ISO27001', 20, 20);
+        pdf.setFontSize(12);
+        pdf.text('Ce PDF de test confirme que la génération fonctionne.', 20, 40);
+        pdf.text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 20, 60);
+        
+        const stats = calculateDetailedStats();
+        pdf.text(`Serveurs: ${stats.serverCount}`, 20, 80);
+        pdf.text(`Comptes: ${stats.accountCount}`, 20, 95);
+        pdf.text(`Identités: ${stats.identityCount}`, 20, 110);
+        
+        pdf.save('test-pdf-cartographie.pdf');
+        updateConnectionIndicator('✅ Test PDF réussi');
+        setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+        
+    } catch (error) {
+        console.error('Test PDF échoué:', error);
+        updateConnectionIndicator('❌ Test PDF échoué');
+        alert('Test PDF échoué: ' + error.message);
+    }
+}
+
+// ==== Divers ====
+function clearAll() { 
+    if (confirm("Êtes-vous sûr de vouloir tout effacer ?")) { 
+        data.servers = []; 
+        render(); 
+        updateStats();
+        updateConnectionIndicator('Cartographie effacée');
+        setTimeout(() => updateConnectionIndicator('✓ Prêt'), 2000);
+    } 
+}
+
+function showHelp() {
+    const helpText = `🛡️ CARTOGRAPHIE ISO27001 - GUIDE D'UTILISATION
+
+📋 FONCTIONS PRINCIPALES:
+• Serveur : Créez des serveurs (rectangles violets)
+• Compte : Cliquez sur un serveur pour ajouter un compte (rectangles bleus)
+• Identité : Cliquez sur un compte pour ajouter une identité (rectangles verts)
+
+🎮 NAVIGATION:
+• Ctrl + Molette souris : Zoom avant/arrière
+• Clic + Glisser sur fond : Déplacer la vue
+• Clic sur nœud : Ajouter un élément enfant
+• Croix rouge : Supprimer l'élément
+
+💾 GESTION DES DONNÉES:
+• Export JSON : Sauvegarde complète
+• Import JSON : Restauration des données
+• Export Draw.io : Compatible avec Draw.io
+• Gérer listes : Personnaliser les options
+
+🎯 WORKFLOW RECOMMANDÉ:
+1. Créer les serveurs principaux
+2. Ajouter les comptes pour chaque serveur
+3. Associer les identités aux comptes
+4. Sauvegarder régulièrement
+
+⚙️ PERSONNALISATION:
+• Utilisez "Gérer listes" pour adapter les options
+• Les statistiques se mettent à jour automatiquement
+• La sidebar peut être réduite pour plus d'espace
+
+Pour plus d'informations sur ISO27001, consultez la documentation officielle.`;
+    
+    alert(helpText);
+}
+
+// ==== Zoom & Pan (JavaScript original conservé) ====
+let panX = 0, panY = 0, scale = 1, isPanning = false, startX, startY;
+const container = document.getElementById('container');
+
+container.addEventListener('mousedown', e => { 
+    if (e.target === container || e.target === svg) {
+        isPanning = true; 
+        startX = e.clientX - panX; 
+        startY = e.clientY - panY; 
+        container.style.cursor = 'grabbing'; 
+    }
+});
+
+container.addEventListener('mouseup', () => { 
+    isPanning = false; 
+    container.style.cursor = 'grab'; 
+});
+
+container.addEventListener('mousemove', e => {
+    if (!isPanning) return;
+    panX = e.clientX - startX; 
+    panY = e.clientY - startY;
+    svg.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+});
+
+container.addEventListener('wheel', e => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    const rect = container.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const oldScale = scale;
+    scale *= e.deltaY > 0 ? 0.9 : 1.1;
+    scale = Math.max(0.1, Math.min(3, scale));
+    
+    const scaleFactor = scale / oldScale;
+    panX = centerX - (centerX - panX) * scaleFactor;
+    panY = centerY - (centerY - panY) * scaleFactor;
+    
+    svg.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+}, { passive: false });
+
+// ==== NOUVELLES FONCTIONS AJOUTÉES ====
+
+// Sidebar toggle
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const icon = document.getElementById('sidebarToggleIcon');
+    
+    sidebarCollapsed = !sidebarCollapsed;
+    sidebar.classList.toggle('collapsed', sidebarCollapsed);
+    icon.textContent = sidebarCollapsed ? '▶' : '◀';
+}
+
+// Mise à jour des statistiques
+function updateStats() {
+    const serverCount = data.servers.length;
+    const accountCount = data.servers.reduce((total, server) => total + server.accounts.length, 0);
+    const identityCount = data.servers.reduce((total, server) => 
+        total + server.accounts.reduce((acc, account) => acc + account.identities.length, 0), 0);
+    const connectionCount = accountCount + identityCount; // Connexions approximatives
+    
+    document.getElementById('serverCount').textContent = serverCount;
+    document.getElementById('accountCount').textContent = accountCount;
+    document.getElementById('identityCount').textContent = identityCount;
+    document.getElementById('connectionCount').textContent = connectionCount;
+}
+
+// Indicateur de connexion
+function updateConnectionIndicator(message) {
+    const indicator = document.getElementById('connectionIndicator');
+    indicator.textContent = message;
+    
+    // Animation du pulse
+    indicator.style.animation = 'none';
+    setTimeout(() => {
+        indicator.style.animation = 'pulse 2s infinite';
+    }, 10);
+}
+
+// Fonctions de zoom supplémentaires
+function zoomIn() {
+    const event = { 
+        ctrlKey: true, 
+        deltaY: -100, 
+        preventDefault: () => {} 
+    };
+    container.dispatchEvent(new WheelEvent('wheel', event));
+}
+
+function zoomOut() {
+    const event = { 
+        ctrlKey: true, 
+        deltaY: 100, 
+        preventDefault: () => {} 
+    };
+    container.dispatchEvent(new WheelEvent('wheel', event));
+}
+
+function resetZoom() {
+    scale = 1;
+    panX = 0;
+    panY = 0;
+    svg.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+}
+
+function centerView() {
+    if (data.servers.length === 0) {
+        updateConnectionIndicator('Aucun élément à centrer');
+        setTimeout(() => updateConnectionIndicator('✓ Prêt'), 1500);
+        return;
+    }
+    
+    // Calculer le centre approximatif du contenu
+    const containerRect = container.getBoundingClientRect();
+    const centerX = containerRect.width / 2;
+    const centerY = containerRect.height / 2;
+    
+    // Approximation simple du centre du contenu
+    const contentCenterX = data.servers.length * 90; // Estimation
+    const contentCenterY = 200; // Estimation basée sur la structure
+    
+    panX = centerX - contentCenterX;
+    panY = centerY - contentCenterY;
+    
+    svg.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+    
+    updateConnectionIndicator('Vue centrée');
+    setTimeout(() => updateConnectionIndicator('✓ Prêt'), 1500);
+}
+
+// Gestion des événements du redimensionnement
+window.addEventListener('resize', () => {
+    render();
+    updateStats();
+});
+
+// Fermer les modales en cliquant à l'extérieur
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+
+// Gestion des raccourcis clavier
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+    }
+    
+    switch(e.key) {
+        case 'Escape':
+            // Fermer toutes les modales
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+            break;
+        case 'h':
+        case 'H':
+            showHelp();
+            break;
+        case 's':
+        case 'S':
+            if (e.ctrlKey) {
+                e.preventDefault();
+                exportJSON();
+            }
+            break;
+    }
+});
+
+// Initialisation
+window.addEventListener('load', () => {
+    render();
+    updateStats();
+    updateConnectionIndicator('✓ Application prête');
+    
+    // Vérifier les librairies PDF
+    checkPDFLibraries();
+    
+    // Masquer l'aide après quelques secondes
+    setTimeout(() => {
+        const helpTooltip = document.querySelector('.help-tooltip');
+        if (helpTooltip) {
+            helpTooltip.style.opacity = '0';
+            setTimeout(() => {
+                helpTooltip.style.display = 'none';
+            }, 500);
+        }
+    }, 10000);
+});
+
+// Vérification des librairies PDF
+function checkPDFLibraries() {
+    const systemStatus = document.getElementById('systemStatus');
+    const libStatus = document.getElementById('libStatus');
+    
+    if (systemStatus && libStatus) {
+        let status = '✅ Système opérationnel';
+        let libStatusText = '';
+        
+        if (window.jspdf) {
+            libStatusText += '✅ jsPDF ';
+        } else {
+            libStatusText += '❌ jsPDF ';
+            status = '⚠️ Librairies manquantes';
+        }
+        
+        if (window.html2canvas) {
+            libStatusText += '✅ html2canvas';
+        } else {
+            libStatusText += '❌ html2canvas';
+            status = '⚠️ Librairies manquantes';
+        }
+        
+        systemStatus.textContent = status;
+        libStatus.textContent = libStatusText;
+        
+        if (status.includes('manquantes')) {
+            setTimeout(() => {
+                systemStatus.innerHTML = '⚠️ Rechargez la page<br>si PDF ne fonctionne pas';
+            }, 3000);
+        }
+    }
+}
+
+function generateDocumentHash() {
+    // Génération d'un hash simple basé sur le contenu
+    const content = JSON.stringify(data) + new Date().toDateString();
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+        const char = content.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convertir en 32bit integer
+    }
+    return Math.abs(hash).toString(16).toUpperCase();
+}
+
+console.log('Cartographie ISO27001 - Version améliorée initialisée');
+</script>
+
 </body>
 </html>
