@@ -1,0 +1,65 @@
+<AppLockerPolicy Version="1">
+  <RuleCollection Type="Exe" EnforcementMode="Enabled">
+    <FilePathRule Id="921cc481-6e17-4653-8f75-050b80acca20" Name="(Règle par défaut) Tous les fichiers se trouvant dans le dossier Program Files" Description="Permet aux membres du groupe Tout le monde d’exécuter les applications se trouvant dans le dossier Program Files." UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="%PROGRAMFILES%\*" />
+      </Conditions>
+    </FilePathRule>
+    <FilePathRule Id="a61c8b2c-a319-4cd0-9690-d2177cad7b51" Name="(Règle par défaut) Tous les fichiers se trouvant dans le dossier Windows" Description="Permet aux membres du groupe Tout le monde d’exécuter les applications se trouvant dans le dossier Windows." UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="%WINDIR%\*" />
+      </Conditions>
+    </FilePathRule>
+    <FilePathRule Id="fd686d83-a829-4351-8ff4-27c7de5755d2" Name="(Règle par défaut) Tous les fichiers" Description="Permet aux membres du groupe Administrateurs local d’exécuter toutes les applications." UserOrGroupSid="S-1-5-32-544" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="*" />
+      </Conditions>
+    </FilePathRule>
+  </RuleCollection>
+  <RuleCollection Type="Msi" EnforcementMode="Enabled">
+    <FilePublisherRule Id="b7af7102-efde-4369-8a89-7a6a392d1473" Name="(Règle par défaut) Tous les fichiers Windows Installer signés numériquement" Description="Permet aux membres du groupe Tout le monde d’exécuter les fichiers Windows Installer signés numériquement." UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions>
+        <FilePublisherCondition PublisherName="*" ProductName="*" BinaryName="*">
+          <BinaryVersionRange LowSection="0.0.0.0" HighSection="*" />
+        </FilePublisherCondition>
+      </Conditions>
+    </FilePublisherRule>
+    <FilePathRule Id="5b290184-345a-4453-b184-45305f6d9a54" Name="(Règle par défaut) Tous les fichiers Windows Installer se trouvant dans le dossier %systemdrive%\Windows\Installer" Description="Permet aux membres du groupe Tout le monde d’exécuter tous les fichiers Windows Installer se trouvant dans le dossier %systemdrive%\Windows\Installer." UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="%WINDIR%\Installer\*" />
+      </Conditions>
+    </FilePathRule>
+    <FilePathRule Id="64ad46ff-0d71-4fa0-a30b-3f3d30c5433d" Name="(Règle par défaut) Tous les fichiers Windows Installer" Description="Permet aux membres du groupe Administrateurs local d’exécuter tous les fichiers Windows Installer." UserOrGroupSid="S-1-5-32-544" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="*.*" />
+      </Conditions>
+    </FilePathRule>
+  </RuleCollection>
+  <RuleCollection Type="Script" EnforcementMode="Enabled">
+    <FilePathRule Id="06dce67b-934c-454f-a263-2515c8796a5d" Name="(Règle par défaut) Tous les scripts se trouvant dans le dossier Program Files" Description="Permet aux membres du groupe Tout le monde d’exécuter les scripts qui se trouvent dans le dossier Program Files." UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="%PROGRAMFILES%\*" />
+      </Conditions>
+    </FilePathRule>
+    <FilePathRule Id="9428c672-5fc3-47f4-808a-a0011f36dd2c" Name="(Règle par défaut) Tous les scripts qui se trouvent dans le dossier Windows" Description="Permet aux membres du groupe Tout le monde d’exécuter les scripts qui se trouvent dans le dossier Windows." UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="%WINDIR%\*" />
+      </Conditions>
+    </FilePathRule>
+    <FilePathRule Id="ed97d0cb-15ff-430f-b82c-8d7832957725" Name="(Règle par défaut) Tous les scripts" Description="Permet aux membres du groupe Administrateurs local d’exécuter tous les scripts." UserOrGroupSid="S-1-5-32-544" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="*" />
+      </Conditions>
+    </FilePathRule>
+  </RuleCollection>
+  <RuleCollection Type="Dll" EnforcementMode="NotConfigured" />
+  <RuleCollection Type="Appx" EnforcementMode="Enabled">
+    <FilePublisherRule Id="a9e18c21-ff8f-43cf-b9fc-db40eed693ba" Name="(Règle par défaut) Toutes les applications empaquetées signées" Description="Permet aux membres du groupe Tout le monde d’exécuter les applications empaquetées qui sont signées." UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions>
+        <FilePublisherCondition PublisherName="*" ProductName="*" BinaryName="*">
+          <BinaryVersionRange LowSection="0.0.0.0" HighSection="*" />
+        </FilePublisherCondition>
+      </Conditions>
+    </FilePublisherRule>
+  </RuleCollection>
+</AppLockerPolicy>
