@@ -20,10 +20,31 @@ $content = Get-Content $exportFile
 
 # Liste des remplacements (façon sed : clé => nouvelle valeur)
 $replacements = @{
-    "MinimumPasswordLength" = "MinimumPasswordLength = 14"
+    "MinimumPasswordLength" = "MinimumPasswordLength = 12"
     "PasswordComplexity"    = "PasswordComplexity = 1"
     "PasswordHistorySize"   = "PasswordHistorySize = 24"
 }
+
+#applocker
+$xmlUrl  = "https://raw.githubusercontent.com/FabFromTheSnow/IT-Homemade/refs/heads/main/LBS/DefaultDesktopAPPLOCK.xml"
+$tempXml = "$env:TEMP\AppLockerPolicy.xml"
+Invoke-WebRequest -Uri $xmlUrl -OutFile $tempXml -UseBasicParsing
+
+# Activer AppLocker
+New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Force | Out-Null
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "AppLocker" -Value 1 -Type DWord
+Set-Service AppIDSvc -StartupType Automatic -ErrorAction SilentlyContinue
+Start-Service AppIDSvc -ErrorAction SilentlyContinue
+
+# Charger le fichier et l’appliquer
+Set-AppLockerPolicy -XMLPolicy $tempXml   # <-- CHEMIN du fichier XML, pas son contenu !
+
+Write-Host "[OK] AppLocker activé et règles importées depuis $tempXml"
+
+# Nettoyage
+Remove-Item $tempXml -Force -ErrorAction SilentlyContinue
+
+Write-Host "AppLocker activé et règles importées."
 
 # Appliquer les remplacements
 foreach ($key in $replacements.Keys) {
@@ -81,3 +102,17 @@ powercfg /change standby-timeout-ac 10
 powercfg /change standby-timeout-dc 10
 
 Write-Host "[OK] Veille configurée à 10 minutes (secteur & batterie)."
+
+Write-Host "[INFO] Désactivation complète de l’AutoRun sur tous les lecteurs et utilisateurs..."
+
+# désactiver AutoRun pour tous les lecteurs (GPO-like)
+New-Item -Path "HKLM:\Software\Policies\Microsoft\Windows\Explorer" -Force | Out-Null
+Set-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\Explorer" -Name "NoDriveTypeAutoRun" -Type DWord -Value 0xFF
+Set-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\Explorer" -Name "NoAutoRun" -Type DWord -Value 1
+
+# appliqué aussi au cas où GPO pas prise en compte
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Type DWord -Value 0xFF
+
+# Désactiver AutoPlay pour tous les utilisateurs
+Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers" -Name "DisableAutoplay" -Type DWord -Value 1
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers" -Name "DisableAutoplay" -Type DWord -Value 1
